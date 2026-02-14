@@ -1233,6 +1233,7 @@ class LaFabbricaParser(BaseManufacturerParser):
         print("🔍 Парсинг коллекций La Fabbrica...")
         
         collections = []
+        seen_urls = set()
         
         # Категории коллекций
         categories = [
@@ -1243,8 +1244,6 @@ class LaFabbricaParser(BaseManufacturerParser):
             'metall-effekt'
         ]
         
-        all_collection_urls = set()
-        
         # Собираем коллекции из всех категорий
         for category in categories:
             print(f"  📂 Категория: {category}")
@@ -1252,61 +1251,68 @@ class LaFabbricaParser(BaseManufacturerParser):
             if not soup:
                 continue
             
-            # Ищем ссылки на коллекции
+            # Ищем ссылки на коллекции, которые содержат изображения
+            # На странице категории каждая коллекция имеет ссылку с изображением
             links = soup.find_all('a', href=re.compile(r'/de/collections/.+'))
             
             for link in links:
                 href = link.get('href')
-                if href and href not in all_collection_urls:
-                    all_collection_urls.add(href)
+                if not href or href in seen_urls:
+                    continue
+                
+                # Ищем изображение в этой ссылке или рядом с ней
+                img = link.find('img')
+                if not img and link.parent:
+                    # Попытка найти изображение рядом с ссылкой
+                    parent = link.parent
+                    img = parent.find('img')
+                
+                if not img:
+                    continue
+                
+                # Получаем URL изображения
+                img_src = img.get('src') or img.get('data-src') or img.get('data-lazy-src', '')
+                if not img_src or 'wp-content' not in img_src:
+                    continue
+                
+                # Исключаем анимированные GIF и логотипы
+                if any(x in img_src.lower() for x in ['.gif', 'logo', 'senza-titolo', 'icon', 'menu']):
+                    continue
+                
+                seen_urls.add(href)
+                
+                # Название из URL или alt текста
+                slug = href.rstrip('/').split('/')[-1]
+                title = img.get('alt', '').strip() or slug.replace('-', ' ').title()
+                
+                # Нормализуем и скачиваем изображение
+                image_url = self.normalize_url(img_src)
+                local_image_path = None
+                if image_url:
+                    local_image_path = self.download_image(image_url)
+                
+                if local_image_path or image_url:
+                    collections.append({
+                        'title': title,
+                        'description': f'Kollektion {title}',
+                        'full_content': '',
+                        'technical_specs': '',
+                        'image_url': local_image_path or image_url,
+                        'source_url': self.normalize_url(href)
+                    })
+                    
+                    print(f"  ✓ Коллекция {title} добавлена")
+                
+                # Ограничение на количество коллекций
+                if len(collections) >= 15:
+                    break
+            
+            if len(collections) >= 15:
+                break
             
             time.sleep(0.3)
         
-        print(f"  Найдено {len(all_collection_urls)} уникальных коллекций")
-        
-        # Обрабатываем найденные коллекции
-        for idx, collection_url in enumerate(list(all_collection_urls)[:15], 1):
-            print(f"  🔗 Обработка коллекции {idx}/{min(15, len(all_collection_urls))}")
-            
-            # Название из URL
-            slug = collection_url.rstrip('/').split('/')[-1]
-            title = slug.replace('-', ' ').title()
-            
-            # Загружаем страницу коллекции для получения изображения
-            soup = self.fetch_page(collection_url)
-            if not soup:
-                continue
-            
-            # Ищем изображение коллекции (исключаем логотипы)
-            img = None
-            for potential_img in soup.find_all('img'):
-                src = potential_img.get('src', '') or potential_img.get('data-src', '') or potential_img.get('data-lazy-src', '')
-                # Исключаем логотипы и служебные изображения
-                if src and 'wp-content' in src:
-                    if not any(x in src.lower() for x in ['logo', 'senza-titolo', 'icon', 'menu']):
-                        img = potential_img
-                        break
-            
-            image_url = None
-            local_image_path = None
-            if img:
-                image_url = self.normalize_url(img.get('src') or img.get('data-src') or img.get('data-lazy-src', ''))
-                if image_url:
-                    local_image_path = self.download_image(image_url)
-            
-            collections.append({
-                'title': title,
-                'description': f'Kollektion {title}',
-                'full_content': '',
-                'technical_specs': '',
-                'image_url': local_image_path or image_url or '',
-                'source_url': self.normalize_url(collection_url)
-            })
-            
-            print(f"  ✓ Коллекция {title} добавлена")
-            
-            time.sleep(0.5)
-        
+        print(f"  📊 Итого: {len(collections)} коллекций")
         return collections
     
     def extract_collection_detail(self, url: str) -> Dict:
