@@ -1,0 +1,74 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Blog{% endblock %}
+{% block page_title %}Blog verwalten{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-accent"></i>Neuer Blogbeitrag</h6>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Titel</label>
+                    <input type="text" class="form-control" name="title" placeholder="Beitragstitel" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Quelle URL (optional)</label>
+                    <input type="url" class="form-control" name="source_url" placeholder="https://...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Inhalt</label>
+                    <textarea class="form-control" name="content" rows="6" placeholder="Beitragsinhalt..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-check-lg me-1"></i>Veröffentlichen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Alle Beiträge</h6>
+            {% if posts %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Titel</th>
+                            <th>Erstellt</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>
+                                {{ post.title }}
+                                {% if post.source_url %}
+                                <a href="{{ post.source_url }}" target="_blank" class="ms-1"><i class="bi bi-link-45deg small"></i></a>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ post.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.delete_blog', post_id=post.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Beitrag löschen?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">Noch keine Blogbeiträge.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

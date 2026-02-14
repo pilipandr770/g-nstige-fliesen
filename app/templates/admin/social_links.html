@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Социальные сети{% endblock %}
+{% block page_title %}Социальные сети обновлять{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Facebook Form -->
+    <div class="col-lg-6">
+        <div class="card admin-card p-4 h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-facebook me-2 text-accent"></i>Facebook</h6>
+
+            <form method="POST">
+                <input type="hidden" name="platform" value="facebook">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-500">Facebook URL</label>
+                    <input type="url" class="form-control" name="url" placeholder="https://facebook.com/..." value="{{ social_links.facebook.url if social_links.facebook else '' }}" required>
+                    <small class="text-muted d-block mt-2">z.B. https://facebook.com/dein-seiten-name</small>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-check-lg me-1"></i>Speichern
+                </button>
+            </form>
+
+            {% if social_links.facebook %}
+            <hr class="my-3">
+            <small class="text-muted">
+                <i class="bi bi-check-circle me-1"></i>Aktiv – <a href="{{ social_links.facebook.url }}" target="_blank" class="text-decoration-none">Link öffnen</a>
+            </small>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Instagram Form -->
+    <div class="col-lg-6">
+        <div class="card admin-card p-4 h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-instagram me-2 text-accent"></i>Instagram</h6>
+
+            <form method="POST">
+                <input type="hidden" name="platform" value="instagram">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-500">Instagram URL</label>
+                    <input type="url" class="form-control" name="url" placeholder="https://instagram.com/..." value="{{ social_links.instagram.url if social_links.instagram else '' }}" required>
+                    <small class="text-muted d-block mt-2">z.B. https://instagram.com/dein-username</small>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-check-lg me-1"></i>Speichern
+                </button>
+            </form>
+
+            {% if social_links.instagram %}
+            <hr class="my-3">
+            <small class="text-muted">
+                <i class="bi bi-check-circle me-1"></i>Aktiv – <a href="{{ social_links.instagram.url }}" target="_blank" class="text-decoration-none">Link öffnen</a>
+            </small>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Preview -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Vorschau auf der Website</h6>
+            <div class="d-flex gap-2">
+                {% if social_links.facebook %}
+                <a href="{{ social_links.facebook.url }}" target="_blank" class="btn btn-lg" style="color: #1877F2; border-color: #1877F2;" title="Facebook">
+                    <i class="bi bi-facebook"></i>
+                </a>
+                {% endif %}
+                {% if social_links.instagram %}
+                <a href="{{ social_links.instagram.url }}" target="_blank" class="btn btn-lg" style="color: #E4405F; border-color: #E4405F;" title="Instagram">
+                    <i class="bi bi-instagram"></i>
+                </a>
+                {% endif %}
+                {% if not social_links.facebook and not social_links.instagram %}
+                <p class="text-muted">Noch keine Sozialen Links aktiv</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

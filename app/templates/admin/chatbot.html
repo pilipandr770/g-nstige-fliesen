@@ -1,0 +1,75 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Chatbot Anweisungen{% endblock %}
+{% block page_title %}Chatbot Anweisungen{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-chat-dots-fill me-2 text-accent"></i>Chatbot Anweisungen</h6>
+
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Info:</strong> Die Basis-Anweisungen sind im Code fest verankert. Zusätzliche Anweisungen haben Vorrang und können
+                z.B. Adresse, Telefon oder Öffnungszeiten überschreiben.
+            </div>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Zusätzliche Anweisungen</label>
+                    <textarea class="form-control" name="chatbot_instructions" rows="10" placeholder="z.B.:
+- Bei Anfragen zu modernen Fliesen: immer die Kollektion XYZ erwähnen
+- Aktuelle Promotion: 10% Rabatt auf Marmor-Serien">{{ instructions }}</textarea>
+                    <small class="text-muted d-block mt-2">
+                        Diese Anweisungen werden an die OpenAI API gesendet. Sie ergänzen die Basis-Anweisungen über das Unternehmen.
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-check-lg me-1"></i>Speichern
+                </button>
+                <a href="{{ url_for('admin.chat_history') }}" class="btn btn-outline-secondary ms-2">
+                    <i class="bi bi-clock-history me-1"></i>Chat-Verlauf
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Basis-Anweisungen (Vorschau) -->
+    <div class="col-lg-4">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-primary"></i>Basis-Anweisungen</h6>
+
+            <div class="small text-muted" style="max-height: 400px; overflow-y: auto;">
+                <p><strong>Identität:</strong></p>
+                <p>Kundenservice-Assistent für Fliesen Showroom Frankfurt</p>
+
+                <p class="mt-3"><strong>Unternehmen:</strong></p>
+                <ul class="ps-3 mb-0">
+                    <li>Musterstraße 12, 60311 Frankfurt</li>
+                    <li>+49 69 123 456 78</li>
+                    <li>info@fliesen-showroom.de</li>
+                    <li>Mo–Fr 09:00 – 18:00, Sa 10:00 – 14:00</li>
+                </ul>
+
+                <p class="mt-3"><strong>Aufgaben:</strong></p>
+                <ul class="ps-3 mb-0">
+                    <li>Fragen zu Fliesen & Kollektionen</li>
+                    <li>Terminvereinbarungen</li>
+                    <li>Kundenservice</li>
+                </ul>
+
+                <p class="mt-3"><strong>Verhalten:</strong></p>
+                <ul class="ps-3 mb-0">
+                    <li>Antwortet in Kundensprache</li>
+                    <li>Freundlich und professionell</li>
+                    <li>Kurz und prägnant</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

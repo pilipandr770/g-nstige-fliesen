@@ -1,0 +1,71 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Seiten{% endblock %}
+{% block page_title %}Seiten verwalten{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-accent"></i>Seite erstellen / bearbeiten</h6>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Slug</label>
+                    <input type="text" class="form-control" name="slug" placeholder="z.B. home, about" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Titel</label>
+                    <input type="text" class="form-control" name="title" placeholder="Seitentitel" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Inhalt</label>
+                    <textarea class="form-control" name="content" rows="6" placeholder="Seiteninhalt..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-check-lg me-1"></i>Speichern
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Vorhandene Seiten</h6>
+            {% if pages %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Slug</th>
+                            <th>Titel</th>
+                            <th>Erstellt</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for page in pages %}
+                        <tr>
+                            <td><code>{{ page.slug }}</code></td>
+                            <td>{{ page.title }}</td>
+                            <td class="text-muted small">{{ page.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.delete_page', page_id=page.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Seite löschen?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">Noch keine Seiten erstellt.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

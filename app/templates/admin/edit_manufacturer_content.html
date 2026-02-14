@@ -1,0 +1,97 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ content.title }} bearbeiten{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5>{{ content.title }} bearbeiten</h5>
+                <small class="text-muted">{{ content.content_type|capitalize }}</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titel *</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ content.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Kurzbeschreibung</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ content.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_content" class="form-label">Vollständiger Inhalt</label>
+                        <textarea class="form-control" id="full_content" name="full_content" rows="6">{{ content.full_content or '' }}</textarea>
+                        <small class="text-muted">HTML wird unterstützt</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="technical_specs" class="form-label">Technische Spezifikationen</label>
+                        <textarea class="form-control" id="technical_specs" name="technical_specs" rows="4">{{ content.technical_specs or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="source_url" class="form-label">Quell-URL</label>
+                        <input type="url" class="form-control" id="source_url" name="source_url" 
+                               value="{{ content.source_url or '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Aktuelles Bild</label>
+                        <div>
+                            {% if content.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + content.image_url) }}" 
+                                 class="img-thumbnail" style="max-width: 300px;">
+                            <div class="mt-2">
+                                <small class="text-muted">{{ content.image_url }}</small>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">Kein Bild vorhanden</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="published" name="published"
+                               {{ 'checked' if content.published else '' }}>
+                        <label class="form-check-label" for="published">
+                            Veröffentlicht (auf der Website sichtbar)
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            Erstellt: {{ content.created_at.strftime('%d.%m.%Y %H:%M') if content.created_at else 'N/A' }}
+                        </small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Speichern
+                            </button>
+                            <a href="{{ url_for('admin.manage_manufacturer_content', manufacturer_id=content.manufacturer_id) }}" 
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                        </div>
+                        <form method="POST" 
+                              action="{{ url_for('admin.delete_manufacturer_content', content_id=content.id) }}"
+                              onsubmit="return confirm('Wirklich löschen? Dies kann nicht rückgängig gemacht werden.')">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Löschen
+                            </button>
+                        </form>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

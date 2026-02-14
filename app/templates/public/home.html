@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Fliesen Showroom Frankfurt – Hochwertige Fliesen & Beratung{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-badge">Showroom in Frankfurt</div>
+                <h1>{{ page.title if page else "Hochwertige Fliesen für Ihr Zuhause" }}</h1>
+                <p class="lead mt-3 mb-4">
+                    {{ page.content if page else "Entdecken Sie unsere exklusive Auswahl an Fliesen, Naturstein und Mosaik. Individuelle Beratung und erstklassiger Service in unserem Showroom." }}
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('public.kontakt') }}" class="btn btn-accent btn-lg px-4">
+                        <i class="bi bi-calendar-check me-2"></i>Termin vereinbaren
+                    </a>
+                    <a href="{{ url_for('public.blog') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-arrow-right me-2"></i>Zum Blog
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="hero-image-container rounded-4 overflow-hidden shadow-lg" style="height: 350px;">
+                    {% if hero_image %}
+                    <img src="/static/uploads/{{ hero_image.filename }}" alt="{{ hero_image.alt_text }}" class="w-100 h-100" style="object-fit: cover;">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100" style="background: linear-gradient(135deg, rgba(176,141,87,0.3), rgba(176,141,87,0.05));">
+                        <i class="bi bi-image" style="font-size: 4rem; color: rgba(255,255,255,0.2);"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Carousel Section -->
+{% if carousel_images %}
+<section class="carousel-section">
+    <div class="container">
+        <div id="mainCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+            <div class="carousel-inner rounded-4 overflow-hidden shadow-lg">
+                {% for image in carousel_images %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}" style="height: 450px;">
+                    <img src="/static/uploads/{{ image.filename }}" class="d-block w-100 h-100" style="object-fit: cover;" alt="{{ image.alt_text }}">
+                    <div class="carousel-overlay"></div>
+                    {% if image.link_url %}
+                    <a href="{{ image.link_url }}" class="carousel-link"></a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if carousel_images|length > 1 %}
+            <!-- Controls -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+
+            <!-- Indicators -->
+            <div class="carousel-indicators mt-3">
+                {% for image in carousel_images %}
+                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" aria-current="true"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Stats Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Fliesenvarianten</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">15+</div>
+                <div class="stat-label">Jahre Erfahrung</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">2000+</div>
+                <div class="stat-label">Zufriedene Kunden</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Top-Marken</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title text-center">Warum Fliesen Showroom?</h2>
+            <p class="text-muted mt-3">Qualität, Auswahl und Service – alles unter einem Dach</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="bi bi-gem"></i>
+                        </div>
+                        <h5 class="fw-bold">Premium Qualität</h5>
+                        <p class="text-muted">Nur ausgewählte Fliesen von führenden europäischen Herstellern in unserem Sortiment.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Persönliche Beratung</h5>
+                        <p class="text-muted">Unsere Experten beraten Sie individuell und helfen Ihnen, die perfekte Lösung zu finden.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mx-auto mb-3">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <h5 class="fw-bold">Lieferung & Verlegung</h5>
+                        <p class="text-muted">Wir bieten umfassenden Service von der Beratung bis zur fachgerechten Verlegung.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tile Preview Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title text-center">Beliebte Kollektionen</h2>
+            <p class="text-muted mt-3">Einblick in unsere meistgefragten Fliesenserien</p>
+        </div>
+        <div class="row g-4">
+            {% if collections %}
+                {% for collection in collections %}
+                <div class="col-md-4">
+                    {% if collection.link_url %}
+                    <a href="{{ collection.link_url }}" class="text-decoration-none">
+                    {% endif %}
+                        <div class="tile-preview {% if collection.link_url %}collection-link{% endif %}" 
+                             {% if collection.filename %}
+                             style="background-image: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%), url('/static/uploads/{{ collection.filename }}'); background-size: cover; background-position: center;"
+                             {% else %}
+                             style="background: linear-gradient(135deg, rgba(176,141,87,0.2) 0%, rgba(176,141,87,0.1) 100%);"
+                             {% endif %}>
+                            <i class="bi bi-grid-3x3"></i>
+                            <div class="overlay">
+                                <h5 class="mb-1">{{ collection.title }}</h5>
+                                {% if collection.subtitle %}
+                                <small>{{ collection.subtitle }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% if collection.link_url %}
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Fallback tiles -->
+                <div class="col-md-4">
+                    <div class="tile-preview" style="background: linear-gradient(135deg, #d4c5a9 0%, #a89275 100%);">
+                        <i class="bi bi-grid-3x3"></i>
+                        <div class="overlay">
+                            <h5 class="mb-1">Marmor Optik</h5>
+                            <small>Eleganz pur für Ihr Badezimmer</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="tile-preview" style="background: linear-gradient(135deg, #8b9dc3 0%, #5b7ca3 100%);">
+                        <i class="bi bi-grid-3x3"></i>
+                        <div class="overlay">
+                            <h5 class="mb-1">Holz Optik</h5>
+                            <small>Natürliches Flair mit robuster Oberfläche</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="tile-preview" style="background: linear-gradient(135deg, #bbb5a7 0%, #8a8275 100%);">
+                        <i class="bi bi-grid-3x3"></i>
+                        <div class="overlay">
+                            <h5 class="mb-1">Beton Optik</h5>
+                            <small>Modernes Industrial Design</small>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 contact-section">
+    <div class="container text-center">
+        <h2 class="section-title text-center">Besuchen Sie unseren Showroom</h2>
+        <p class="text-muted mt-3 mb-4 mx-auto" style="max-width: 600px;">
+            Überzeugen Sie sich persönlich von der Qualität unserer Fliesen.
+            Vereinbaren Sie jetzt einen Termin für eine individuelle Beratung.
+        </p>
+        <a href="{{ url_for('public.kontakt') }}" class="btn btn-accent btn-lg px-5">
+            <i class="bi bi-geo-alt-fill me-2"></i>Showroom besuchen
+        </a>
+    </div>
+</section>
+
+{% endblock %}

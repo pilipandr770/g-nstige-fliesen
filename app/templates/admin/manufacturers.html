@@ -1,0 +1,246 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Hersteller verwalten{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 id="form-title">Neuer Hersteller</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="action" id="action" value="add">
+                    <input type="hidden" name="manufacturer_id" id="manufacturer_id" value="">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="slug" class="form-label">Slug (URL) *</label>
+                        <input type="text" class="form-control" id="slug" name="slug" required 
+                               placeholder="z.B. aparici, dune, la-fabbrica">
+                        <small class="text-muted">Verwendet für URLs: /hersteller/[slug]</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="logo" class="form-label">Logo</label>
+                        <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="website" class="form-label">Website *</label>
+                        <input type="url" class="form-control" id="website" name="website" required 
+                               placeholder="https://www.hersteller.com/de">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Land</label>
+                        <input type="text" class="form-control" id="country" name="country" 
+                               placeholder="z.B. Spanien, Italien">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Beschreibung</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="order" class="form-label">Reihenfolge</label>
+                        <input type="number" class="form-control" id="order" name="order" value="0">
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+                        <label class="form-check-label" for="active">
+                            Aktiv
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="auto_sync" name="auto_sync">
+                        <label class="form-check-label" for="auto_sync">
+                            Automatische Synchronisierung
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Speichern
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="bi bi-x-circle"></i> Abbrechen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5>Alle Hersteller</h5>
+            </div>
+            <div class="card-body">
+                {% if manufacturers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Logo</th>
+                                <th>Name</th>
+                                <th>Slug</th>
+                                <th>Land</th>
+                                <th>Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for manufacturer in manufacturers %}
+                            <tr>
+                                <td>
+                                    {% set logo_path = manufacturer_logos.get(manufacturer.slug, '') %}
+                                    {% if logo_path %}
+                                    <img src="{{ url_for('static', filename='uploads/' + logo_path) }}" 
+                                         alt="{{ manufacturer.name }}" 
+                                         class="manufacturer-logo"
+                                         style="max-height: 40px;">
+                                    {% else %}
+                                    <i class="bi bi-image" style="font-size: 2rem;"></i>
+                                    {% endif %}
+                                </td>
+                                <td>{{ manufacturer.name }}</td>
+                                <td><code>{{ manufacturer.slug }}</code></td>
+                                <td>{{ manufacturer.country or '-' }}</td>
+                                <td>
+                                    {% if manufacturer.active %}
+                                    <span class="badge bg-success">Aktiv</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inaktiv</span>
+                                    {% endif %}
+                                    {% if manufacturer.auto_sync %}
+                                    <span class="badge bg-info">Auto-Sync</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="editManufacturer({{ manufacturer.id }}, '{{ manufacturer.name }}', '{{ manufacturer.slug }}', '{{ manufacturer.website }}', '{{ manufacturer.description|replace('\n', '\\n')|replace("'", "\\'") }}', '{{ manufacturer.country or '' }}', {{ manufacturer.order }}, {{ 'true' if manufacturer.active else 'false' }}, {{ 'true' if manufacturer.auto_sync else 'false' }})"
+                                                title="Hersteller bearbeiten">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        
+                                        <a href="{{ url_for('admin.manage_manufacturer_content', manufacturer_id=manufacturer.id) }}" 
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Inhalt verwalten">
+                                            <i class="bi bi-files"></i>
+                                        </a>
+                                        
+                                        <form method="POST" action="{{ url_for('admin.sync_manufacturer_content', manufacturer_id=manufacturer.id) }}" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('Inhalt von {{ manufacturer.name }} synchronisieren?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                    title="Inhalt synchronisieren">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <form method="POST" action="{{ url_for('admin.delete_manufacturer', manufacturer_id=manufacturer.id) }}" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('ACHTUNG: Hersteller {{ manufacturer.name }} UND ALLE INHALTE werden gelöscht! Wirklich fortfahren?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    title="Hersteller löschen">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <a href="{{ url_for('public.manufacturer_detail', slug=manufacturer.slug) }}" 
+                                           class="btn btn-sm btn-outline-secondary" target="_blank" 
+                                           title="Vorschau">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% if manufacturer.last_sync %}
+                            <tr>
+                                <td colspan="6" class="text-muted small">
+                                    Letzte Synchronisierung: {{ manufacturer.last_sync.strftime('%d.%m.%Y %H:%M') }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Noch keine Hersteller hinzugefügt.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Verfügbare Hersteller für Auto-Import</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Folgende Hersteller werden vom System unterstützt und können automatisch synchronisiert werden:
+                </p>
+                <ul>
+                    <li><strong>aparici</strong> - Aparici (Spanien)</li>
+                    <li><strong>ape</strong> - APE Grupo (Spanien)</li>
+                    <li><strong>lafabbrica</strong> - La Fabbrica / AVA (Italien)</li>
+                    <li><strong>dune</strong> - Dune Ceramics (Spanien)</li>
+                    <li><strong>equipe</strong> - Equipe Ceramicas (Spanien)</li>
+                    <li><strong>casalgrande</strong> - Casalgrande Padana (Italien)</li>
+                </ul>
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle"></i> Verwenden Sie den Slug genau wie oben angegeben für die Auto-Synchronisierung.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editManufacturer(id, name, slug, website, description, country, order, active, autoSync) {
+    document.getElementById('form-title').textContent = 'Hersteller bearbeiten';
+    document.getElementById('action').value = 'edit';
+    document.getElementById('manufacturer_id').value = id;
+    document.getElementById('name').value = name;
+    document.getElementById('slug').value = slug;
+    document.getElementById('website').value = website;
+    document.getElementById('description').value = description;
+    document.getElementById('country').value = country;
+    document.getElementById('order').value = order;
+    document.getElementById('active').checked = active;
+    document.getElementById('auto_sync').checked = autoSync;
+    
+    // Scroll to form
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+    document.getElementById('form-title').textContent = 'Neuer Hersteller';
+    document.getElementById('action').value = 'add';
+    document.getElementById('manufacturer_id').value = '';
+    document.querySelector('form').reset();
+    document.getElementById('active').checked = true;
+}
+
+// Auto-generate slug from name
+document.getElementById('name').addEventListener('input', function() {
+    if (!document.getElementById('manufacturer_id').value) {  // Only for new manufacturers
+        const slug = this.value.toLowerCase()
+            .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+            .replace(/ß/g, 'ss')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        document.getElementById('slug').value = slug;
+    }
+});
+</script>
+{% endblock %}

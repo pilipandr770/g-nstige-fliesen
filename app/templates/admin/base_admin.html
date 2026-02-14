@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin{% endblock %} – Fliesen Showroom</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #b08d57;
+            --accent-dark: #8c6d3f;
+            --sidebar-bg: #1a1a2e;
+            --sidebar-width: 260px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #fff;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+        .admin-sidebar .brand {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1rem;
+        }
+        .admin-sidebar .brand h5 {
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .admin-sidebar .brand small {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.75rem;
+        }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav li a:hover,
+        .sidebar-nav li a.active {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            border-left-color: var(--accent);
+        }
+        .sidebar-nav li a i {
+            margin-right: 12px;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        .sidebar-section {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.25);
+            margin-top: 1rem;
+        }
+
+        /* Main Content */
+        .admin-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+        .admin-topbar {
+            background: #fff;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-content {
+            padding: 2rem;
+        }
+        .admin-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            background: #fff;
+        }
+        .btn-accent {
+            background-color: var(--accent);
+            color: #fff;
+            border: none;
+        }
+        .btn-accent:hover {
+            background-color: var(--accent-dark);
+            color: #fff;
+        }
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            background: #fff;
+            padding: 1.5rem;
+        }
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="brand">
+            <h5><i class="bi bi-grid-3x3-gap-fill me-2" style="color: var(--accent)"></i>Admin Panel</h5>
+            <small>Fliesen Showroom Frankfurt</small>
+        </div>
+
+        <div class="sidebar-section">Hauptmenü</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        </ul>
+
+        <div class="sidebar-section">Inhalte</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('admin.manage_pages') }}" class="{% if request.endpoint == 'admin.manage_pages' %}active{% endif %}"><i class="bi bi-file-earmark-text"></i> Seiten</a></li>
+            <li><a href="{{ url_for('admin.manage_blog') }}" class="{% if request.endpoint == 'admin.manage_blog' %}active{% endif %}"><i class="bi bi-journal-text"></i> Blog</a></li>
+            <li><a href="{{ url_for('admin.manage_manufacturers') }}" class="{% if request.endpoint == 'admin.manage_manufacturers' %}active{% endif %}"><i class="bi bi-building"></i> Hersteller</a></li>
+            <li><a href="{{ url_for('admin.manage_sources') }}" class="{% if request.endpoint == 'admin.manage_sources' %}active{% endif %}"><i class="bi bi-link-45deg"></i> Content Quellen</a></li>
+        </ul>
+
+        <div class="sidebar-section">Chatbot</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('admin.manage_chatbot') }}" class="{% if request.endpoint == 'admin.manage_chatbot' %}active{% endif %}"><i class="bi bi-chat-dots-fill"></i> Anweisungen</a></li>
+            <li><a href="{{ url_for('admin.chat_history') }}" class="{% if request.endpoint == 'admin.chat_history' %}active{% endif %}"><i class="bi bi-clock-history"></i> Verlauf</a></li>
+        </ul>
+
+        <div class="sidebar-section">Design</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('admin.manage_hero_image') }}" class="{% if request.endpoint == 'admin.manage_hero_image' %}active{% endif %}"><i class="bi bi-image"></i> Hero Bild</a></li>
+            <li><a href="{{ url_for('admin.manage_collections') }}" class="{% if request.endpoint == 'admin.manage_collections' %}active{% endif %}"><i class="bi bi-grid"></i> Kollektionen</a></li>
+            <li><a href="{{ url_for('admin.manage_carousel') }}" class="{% if request.endpoint == 'admin.manage_carousel' %}active{% endif %}"><i class="bi bi-images"></i> Karousell</a></li>
+            <li><a href="{{ url_for('admin.manage_social_links') }}" class="{% if request.endpoint == 'admin.manage_social_links' %}active{% endif %}"><i class="bi bi-link-45deg"></i> Soziale Links</a></li>
+        </ul>
+
+        <div class="sidebar-section">Website</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('public.home') }}" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Website öffnen</a></li>
+        </ul>
+
+        <div class="sidebar-section">Konto</div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-left"></i> Abmelden</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <!-- Topbar -->
+        <div class="admin-topbar">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-sm btn-outline-secondary d-lg-none me-3" onclick="document.getElementById('adminSidebar').classList.toggle('show')">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0 fw-bold">{% block page_title %}Dashboard{% endblock %}</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small">
+                    <i class="bi bi-person-circle me-1"></i> {{ current_user.username }}
+                </span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-box-arrow-left me-1"></i>Abmelden
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="admin-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

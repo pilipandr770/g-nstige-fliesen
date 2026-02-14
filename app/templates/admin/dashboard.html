@@ -1,0 +1,102 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-500">Seiten</div>
+                    <div class="fs-3 fw-bold">{{ page_count }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(176,141,87,0.1); color: #b08d57;">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-500">Blogbeiträge</div>
+                    <div class="fs-3 fw-bold">{{ blog_count }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(59,130,246,0.1); color: #3b82f6;">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-500">Quellen</div>
+                    <div class="fs-3 fw-bold">{{ source_count }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
+                    <i class="bi bi-link-45deg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-500">Chat-Anfragen</div>
+                    <div class="fs-3 fw-bold">{{ chat_count }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-lightning-fill text-warning me-2"></i>Schnellaktionen</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('admin.manage_pages') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Neue Seite
+                </a>
+                <a href="{{ url_for('admin.manage_blog') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Neuer Blogbeitrag
+                </a>
+                <a href="{{ url_for('admin.manage_sources') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Neue Quelle
+                </a>
+                <a href="{{ url_for('public.home') }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-eye me-1"></i>Website ansehen
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-chat-dots me-2 text-info"></i>Letzte Chat-Anfragen</h6>
+            {% if recent_chats %}
+                {% for chat in recent_chats %}
+                <div class="border-bottom py-2">
+                    <small class="text-muted">{{ chat.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    <p class="mb-0 small">{{ chat.user_message[:100] }}{% if chat.user_message|length > 100 %}...{% endif %}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted small mb-0">Noch keine Chat-Anfragen.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

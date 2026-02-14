@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Hero Bild{% endblock %}
+{% block page_title %}Hero Bild verwalten{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Upload Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-image me-2 text-accent"></i>Bild hochladen</h6>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Neues Bild *</label>
+                    <input type="file" class="form-control" name="file" accept="image/*" required>
+                    <small class="text-muted d-block mt-2">PNG, JPG, GIF, WebP (max. 10MB)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-500">Alt-Text (optional)</label>
+                    <input type="text" class="form-control" name="alt_text" placeholder="Bildbeschreibung für SEO">
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-upload me-1"></i>Hochladen & Ersetzen
+                </button>
+            </form>
+
+            <hr class="my-3">
+            <small class="text-muted d-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Dieses Bild wird auf der Startseite in der rechten Seite des Hero-Bereichs angezeigt. 
+                Beim Hochladen eines neuen Bildes aktualisiert sich die alte Version automatisch.
+            </small>
+        </div>
+    </div>
+
+    <!-- Current Image -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-image me-2"></i>Aktuelles Bild</h6>
+
+            {% if hero_image %}
+            <div class="text-center">
+                <img src="/static/uploads/{{ hero_image.filename }}" class="img-fluid rounded-4 shadow" style="max-height: 400px; object-fit: cover;">
+                <div class="mt-3 text-muted">
+                    <small>
+                        <i class="bi bi-file-image me-1"></i>Datei: {{ hero_image.filename }}<br>
+                        {% if hero_image.alt_text %}
+                        <i class="bi bi-type me-1"></i>Alt-Text: {{ hero_image.alt_text }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-image display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Noch kein Bild hochgeladen</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Preview -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Vorschau - Startseite</h6>
+            
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    <div style="height: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(176,141,87,0.2);">
+                        {% if hero_image %}
+                        <img src="/static/uploads/{{ hero_image.filename }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ hero_image.alt_text }}">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100" style="background: linear-gradient(135deg, rgba(176,141,87,0.3), rgba(176,141,87,0.05));">
+                            <i class="bi bi-image" style="font-size: 4rem; color: rgba(255,255,255,0.2);"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

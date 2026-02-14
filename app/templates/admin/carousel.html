@@ -1,0 +1,118 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Карусель{% endblock %}
+{% block page_title %}Карусель управление{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Upload Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-image me-2 text-accent"></i>Новое изображение</h6>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Изображение *</label>
+                    <input type="file" class="form-control" name="file" accept="image/*" required>
+                    <small class="text-muted d-block mt-2">PNG, JPG, GIF, WebP (макс. 5MB)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-500">Alt-текст</label>
+                    <input type="text" class="form-control" name="alt_text" placeholder="Описание изображения">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-500">URL при клике (опционально)</label>
+                    <input type="url" class="form-control" name="link_url" placeholder="https://...">
+                </div>
+
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-upload me-1"></i>Загрузить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Images List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-images me-2"></i>Карусель-изображения</h6>
+
+            {% if images %}
+            <div class="row g-3">
+                {% for image in images %}
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light">
+                        <img src="/static/uploads/{{ image.filename }}" class="card-img-top" alt="{{ image.alt_text }}" style="height: 150px; object-fit: cover;">
+                        <div class="card-body p-3">
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-image"></i> {{ image.filename[:30] }}{% if image.filename|length > 30 %}...{% endif %}
+                            </p>
+                            {% if image.alt_text %}
+                            <p class="small mb-2"><strong>Alt:</strong> {{ image.alt_text[:50] }}</p>
+                            {% endif %}
+                            {% if image.link_url %}
+                            <p class="small mb-3">
+                                <i class="bi bi-link-45deg"></i>
+                                <a href="{{ image.link_url }}" target="_blank" class="text-decoration-none">
+                                    {{ image.link_url[:40] }}{% if image.link_url|length > 40 %}...{% endif %}
+                                </a>
+                            </p>
+                            {% endif %}
+                            <a href="{{ url_for('admin.delete_carousel_image', image_id=image.id) }}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               onclick="return confirm('Wirklich löschen?')">
+                                <i class="bi bi-trash"></i> Löschen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-images display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Noch keine Bilder in der Karousell</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Preview Carousel -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Vorschau Karousell</h6>
+            
+            {% if images %}
+            <div id="carouselPreview" class="carousel slide rounded-4 overflow-hidden" style="height: 350px; background: #000;" data-bs-ride="carousel">
+                <div class="carousel-inner h-100">
+                    {% for image in images %}
+                    <div class="carousel-item h-100 {% if loop.first %}active{% endif %}">
+                        <img src="/static/uploads/{{ image.filename }}" class="d-block w-100 h-100" style="object-fit: cover;" alt="{{ image.alt_text }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if images|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselPreview" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselPreview" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 bg-light rounded-4">
+                <i class="bi bi-image display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Загрузите изображения для Vorschau</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

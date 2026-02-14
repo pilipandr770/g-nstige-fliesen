@@ -1,0 +1,114 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Hero Galerie{% endblock %}
+{% block page_title %}Hero Galerie verwalten{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Upload Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-image me-2 text-accent"></i>Neues Bild</h6>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Bild *</label>
+                    <input type="file" class="form-control" name="file" accept="image/*" required>
+                    <small class="text-muted d-block mt-2">PNG, JPG, GIF, WebP (max. 5MB)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-500">Alt-Text</label>
+                    <input type="text" class="form-control" name="alt_text" placeholder="Bildbeschreibung">
+                </div>
+
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-upload me-1"></i>Hochladen
+                </button>
+            </form>
+
+            <hr class="my-3">
+            <small class="text-muted d-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Diese Bilder werden in einer flotierenden Galerie auf der Startseite angezeigt (bis zu 4 Bilder).
+            </small>
+        </div>
+    </div>
+
+    <!-- Images List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-images me-2"></i>Galerie-Bilder</h6>
+
+            {% if images %}
+            <div class="row g-3">
+                {% for image in images %}
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light">
+                        <img src="/static/uploads/{{ image.filename }}" class="card-img-top" alt="{{ image.alt_text }}" style="height: 150px; object-fit: cover; border-radius: 8px 8px 0 0;">
+                        <div class="card-body p-3">
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-image"></i> {{ image.filename[:30] }}{% if image.filename|length > 30 %}...{% endif %}
+                            </p>
+                            {% if image.alt_text %}
+                            <p class="small mb-3"><strong>Alt:</strong> {{ image.alt_text[:50] }}</p>
+                            {% endif %}
+                            <a href="{{ url_for('admin.delete_hero_image', image_id=image.id) }}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               onclick="return confirm('Bild wirklich löschen?')">
+                                <i class="bi bi-trash"></i> Löschen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-images display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Noch keine Bilder in der Galerie</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Preview -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Vorschau - Startseite</h6>
+            
+            {% if images %}
+            <div style="width: 350px; height: 350px; margin: auto; position: relative; border-radius: 50%;
+                background: linear-gradient(135deg, rgba(176,141,87,0.3), rgba(176,141,87,0.05));
+                display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                
+                {% for image in images %}
+                <div style="position: absolute; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); 
+                    border: 4px solid rgba(255, 255, 255, 0.1);" 
+                    {% if loop.first %}
+                    style="width: 120px; height: 120px; top: 20px; left: 50%; transform: translateX(-50%);"
+                    {% elif loop.index == 2 %}
+                    style="width: 110px; height: 110px; top: 140px; left: 30px;"
+                    {% elif loop.index == 3 %}
+                    style="width: 110px; height: 110px; top: 140px; right: 30px;"
+                    {% else %}
+                    style="width: 100px; height: 100px; bottom: 30px; left: 50%; transform: translateX(-50%);"
+                    {% endif %}>
+                    <img src="/static/uploads/{{ image.filename }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ image.alt_text }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-image display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Laden Sie Bilder hoch um die Vorschau zu sehen</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

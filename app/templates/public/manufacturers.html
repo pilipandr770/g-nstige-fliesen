@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Unsere Hersteller{% endblock %}
+
+{% block content %}
+<!-- Заголовок страницы -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 mb-3">Unsere Hersteller</h1>
+                <p class="lead text-muted">
+                    Wir arbeiten mit führenden Herstellern keramischer Fliesen aus Europa zusammen.
+                    Entdecken Sie die Vielfalt hochwertiger Kollektionen, Projekte und Design-Trends.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Карточки производителей -->
+<section class="py-5">
+    <div class="container">
+        {% if manufacturers %}
+        <div class="row g-4">
+            {% for manufacturer in manufacturers %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 manufacturer-card">
+                    <a href="{{ url_for('public.manufacturer_detail', slug=manufacturer.slug) }}" 
+                       class="text-decoration-none">
+                        <div class="card-body text-center">
+                            {% set logo_path = manufacturer_logos.get(manufacturer.slug, '') %}
+                            {% if logo_path %}
+                            <img src="{{ url_for('static', filename='uploads/' + logo_path) }}" 
+                                 alt="{{ manufacturer.name }}" 
+                                 class="manufacturer-logo mb-3" 
+                                 style="max-height: 240px; max-width: 100%; object-fit: contain;">
+                            {% else %}
+                            <i class="bi bi-building" style="font-size: 3rem; color: #6c757d;"></i>
+                            {% endif %}
+                            
+                            <h3 class="h4 mb-2">{{ manufacturer.name }}</h3>
+                            
+                            {% if manufacturer.country %}
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt"></i> {{ manufacturer.country }}
+                            </p>
+                            {% endif %}
+                            
+                            {% if manufacturer.description %}
+                            <p class="text-muted small">
+                                {{ manufacturer.description[:150] }}{% if manufacturer.description|length > 150 %}...{% endif %}
+                            </p>
+                            {% endif %}
+                            
+                            <div class="mt-3">
+                                <span class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-arrow-right"></i> Mehr erfahren
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> 
+            Noch keine Hersteller verfügbar.
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Преимущества -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <i class="bi bi-award" style="font-size: 3rem; color: #0d6efd;"></i>
+                <h3 class="h5 mt-3">Premium-Qualität</h3>
+                <p class="text-muted">
+                    Ausgewählte Hersteller mit höchsten Qualitätsstandards
+                </p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <i class="bi bi-palette" style="font-size: 3rem; color: #0d6efd;"></i>
+                <h3 class="h5 mt-3">Vielfältiges Design</h3>
+                <p class="text-muted">
+                    Tausende Kollektionen für jeden Geschmack und Stil
+                </p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <i class="bi bi-globe-europe-africa" style="font-size: 3rem; color: #0d6efd;"></i>
+                <h3 class="h5 mt-3">Europäische Hersteller</h3>
+                <p class="text-muted">
+                    Direkt aus Spanien, Italien und anderen EU-Ländern
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.manufacturer-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.manufacturer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.manufacturer-card a {
+    color: inherit;
+}
+
+.manufacturer-card a:hover h3 {
+    color: #0d6efd;
+}
+</style>
+{% endblock %}

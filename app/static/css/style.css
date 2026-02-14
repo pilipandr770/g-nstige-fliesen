@@ -1,0 +1,512 @@
+/* ========================================
+   Fliesen Showroom Frankfurt – Custom CSS
+   ======================================== */
+
+:root {
+    --accent: #b08d57;
+    --accent-dark: #8c6d3f;
+    --accent-light: #d4b98a;
+    --dark-bg: #1a1a2e;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* --- Typography --- */
+body {
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    background: #fafafa;
+    padding-top: 72px; /* navbar height */
+}
+
+h1, h2, h3, h4, h5, .brand-text {
+    font-family: 'Playfair Display', serif;
+}
+
+.brand-text {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+/* --- Accent Color Utility --- */
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.bg-accent {
+    background-color: var(--accent) !important;
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-accent:hover {
+    background-color: var(--accent-dark);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-outline-accent {
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-accent:hover {
+    background-color: var(--accent);
+    color: #fff;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-30 30v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    z-index: 0;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-section h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.hero-section .lead {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.75);
+    font-weight: 300;
+}
+
+.hero-badge {
+    display: inline-block;
+    background: rgba(176, 141, 87, 0.15);
+    border: 1px solid rgba(176, 141, 87, 0.4);
+    color: var(--accent-light);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+}
+
+/* --- Feature Cards --- */
+.feature-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    background: #fff;
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(176, 141, 87, 0.1);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+
+/* --- Section Styles --- */
+.section-title {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+.section-title.text-center::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* --- Blog Cards --- */
+.blog-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: #fff;
+}
+
+.blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+.blog-card .card-body {
+    padding: 1.5rem;
+}
+
+.blog-date {
+    font-size: 0.8rem;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Tiles Grid (preview for catalog images) --- */
+.tile-preview {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    height: 280px;
+    background: linear-gradient(135deg, #e8dcc8 0%, #c4a97d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 3rem;
+    transition: all 0.3s ease;
+}
+
+.tile-preview.collection-link {
+    cursor: pointer;
+}
+
+.tile-preview.collection-link:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(176, 141, 87, 0.25);
+}
+
+.tile-preview.collection-link:hover .overlay {
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+}
+
+.tile-preview .overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    padding: 1.5rem;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* --- Contact Section --- */
+.contact-section {
+    background: linear-gradient(135deg, #f8f6f3 0%, #ede8e0 100%);
+}
+
+.contact-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    background: #fff;
+}
+
+/* --- Chat Widget --- */
+#chat-widget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+}
+
+#chat-toggle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+#chat-window {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    width: 360px;
+    max-height: 480px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    border-radius: 16px 16px 0 0;
+}
+
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 340px;
+    min-height: 200px;
+}
+
+.chat-bot-msg small,
+.chat-user-msg small {
+    max-width: 80%;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+.chat-user-msg {
+    text-align: right;
+}
+
+.chat-user-msg small {
+    background-color: var(--accent) !important;
+    color: #fff;
+}
+
+.chat-input-area input:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* --- Footer --- */
+.footer-link:hover {
+    color: var(--accent) !important;
+    transition: color 0.3s;
+}
+
+footer a:hover {
+    color: var(--accent) !important;
+}
+
+/* --- Misc --- */
+.divider-accent {
+    width: 60px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+/* --- Page Header (inner pages) --- */
+.page-header {
+    padding: 5rem 0 3rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* --- Stats Counter --- */
+.stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.2rem;
+    }
+    .hero-section {
+        min-height: 60vh;
+    }
+    #chat-window {
+        width: 300px;
+        right: -10px;
+    }
+    body {
+        padding-top: 60px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-section h1 {
+        font-size: 1.8rem;
+    }
+    #chat-window {
+        width: 280px;
+    }
+}
+
+/* ========== Carousel Styles ========== */
+.carousel-section {
+    padding: 40px 0;
+    background: #fff;
+}
+
+.carousel-fade .carousel-item {
+    transition: opacity 0.6s ease-in-out !important;
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 450px;
+    object-fit: cover;
+}
+
+.carousel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 100%);
+}
+
+.carousel-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: auto;
+    height: auto;
+    background: none;
+    border: none;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+}
+
+.carousel-indicators [data-bs-slide-to] {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicators [data-bs-slide-to].active {
+    background-color: var(--accent);
+    width: 30px;
+    border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+    .carousel-item img {
+        height: 300px;
+    }
+    
+    .carousel-section {
+        padding: 20px 0;
+    }
+}
+
+/* ========== Social Links Styles ========== */
+.social-link-item {
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-link-item:hover {
+    color: var(--accent) !important;
+    transform: translateY(-3px);
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+/* ========== Hero Image Styles ========== */
+.hero-image-container {
+    background: linear-gradient(135deg, rgba(176,141,87,0.3), rgba(176,141,87,0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.hero-image-container:hover {
+    transform: scale(1.02);
+}
+
+.hero-image-container img {
+    transition: transform 0.3s ease;
+}
+
+.hero-image-container:hover img {
+    transform: scale(1.05);
+}
+/* --- Manufacturer Logos --- */
+.manufacturer-logo {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.25));
+}

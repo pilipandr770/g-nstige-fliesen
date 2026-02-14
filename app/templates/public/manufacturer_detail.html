@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}{{ manufacturer.name }} - Hersteller{% endblock %}
+
+{% block content %}
+<!-- Хедер производителя -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    {% set logo_path = manufacturer_logos.get(manufacturer.slug, '') %}
+                    {% if logo_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + logo_path) }}" 
+                         alt="{{ manufacturer.name }}" 
+                         class="manufacturer-logo me-3" 
+                         style="max-height: 80px;">
+                    {% endif %}
+                    <div>
+                        <h1 class="mb-1">{{ manufacturer.name }}</h1>
+                        {% if manufacturer.country %}
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-geo-alt"></i> {{ manufacturer.country }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if manufacturer.description %}
+                <p class="lead">{{ manufacturer.description }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-4 text-md-end">
+                <!-- Website link removed to keep users on our site -->
+            </div>
+        </div>
+        
+        <!-- Навигация по типам контента -->
+        <ul class="nav nav-tabs mt-4" id="contentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="collections-tab" data-bs-toggle="tab" 
+                        data-bs-target="#collections" type="button" role="tab">
+                    <i class="bi bi-grid-3x3"></i> Kollektionen 
+                    <span class="badge bg-secondary">{{ collections|length }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="projects-tab" data-bs-toggle="tab" 
+                        data-bs-target="#projects" type="button" role="tab">
+                    <i class="bi bi-building"></i> Projekte 
+                    <span class="badge bg-secondary">{{ projects|length }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="blog-tab" data-bs-toggle="tab" 
+                        data-bs-target="#blog" type="button" role="tab">
+                    <i class="bi bi-newspaper"></i> News 
+                    <span class="badge bg-secondary">{{ blog_posts|length }}</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<!-- Контент производителя -->
+<section class="py-5">
+    <div class="container">
+        <div class="tab-content" id="contentTabsContent">
+            <!-- Коллекции -->
+            <div class="tab-pane fade show active" id="collections" role="tabpanel">
+                {% if collections %}
+                <div class="row g-4">
+                    {% for item in collections %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 content-card">
+                            {% if item.image_url %}
+                                {% if item.image_url.startswith('http') %}
+                                <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="card-img-top" alt="{{ item.title }}">
+                                {% endif %}
+                            {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="bi bi-image" style="font-size: 3rem; color: #dee2e6;"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <h5 class="card-title">{{ item.title }}</h5>
+                                {% if item.subtitle %}
+                                <p class="text-muted small mb-2">{{ item.subtitle }}</p>
+                                {% endif %}
+                                {% if item.description %}
+                                <p class="card-text">{{ item.description[:100] }}...</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="card-footer bg-white">
+                                <a href="{{ url_for('public.manufacturer_content_detail', slug=manufacturer.slug, content_id=item.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Details ansehen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('public.manufacturer_content_list', slug=manufacturer.slug, content_type='collection') }}" 
+                       class="btn btn-primary">
+                        Alle Kollektionen anzeigen
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    Noch keine Kollektionen verfügbar.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Проекты -->
+            <div class="tab-pane fade" id="projects" role="tabpanel">
+                {% if projects %}
+                <div class="row g-4">
+                    {% for item in projects %}
+                    <div class="col-md-6">
+                        <div class="card content-card h-100">
+                            <div class="row g-0">
+                                {% if item.image_url %}
+                                <div class="col-md-4">
+                                    {% if item.image_url.startswith('http') %}
+                                    <img src="{{ item.image_url }}" class="img-fluid rounded-start h-100 object-fit-cover" 
+                                         alt="{{ item.title }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="img-fluid rounded-start h-100 object-fit-cover" 
+                                         alt="{{ item.title }}">
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="{{ 'col-md-8' if item.image_url else 'col-md-12' }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ item.title }}</h5>
+                                        {% if item.description %}
+                                        <p class="card-text">{{ item.description }}</p>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('public.manufacturer_content_detail', slug=manufacturer.slug, content_id=item.id) }}" 
+                                           class="btn btn-sm btn-outline-primary mt-2">
+                                            <i class="bi bi-eye"></i> Projekt ansehen
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('public.manufacturer_content_list', slug=manufacturer.slug, content_type='project') }}" 
+                       class="btn btn-primary">
+                        Alle Projekte anzeigen
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    Noch keine Projekte verfügbar.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Новости/Блог -->
+            <div class="tab-pane fade" id="blog" role="tabpanel">
+                {% if blog_posts %}
+                <div class="row g-4">
+                    {% for item in blog_posts %}
+                    <div class="col-md-12">
+                        <div class="card content-card">
+                            <div class="row g-0">
+                                {% if item.image_url %}
+                                <div class="col-md-3">
+                                    {% if item.image_url.startswith('http') %}
+                                    <img src="{{ item.image_url }}" class="img-fluid rounded-start h-100 object-fit-cover" 
+                                         alt="{{ item.title }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="img-fluid rounded-start h-100 object-fit-cover" 
+                                         alt="{{ item.title }}">
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="{{ 'col-md-9' if item.image_url else 'col-md-12' }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ item.title }}</h5>
+                                        <p class="text-muted small mb-2">
+                                            <i class="bi bi-calendar"></i> 
+                                            {{ item.created_at.strftime('%d.%m.%Y') if item.created_at else 'Neu' }}
+                                        </p>
+                                        {% if item.full_content %}
+                                        <p class="card-text">{{ item.full_content[:200] }}...</p>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('public.manufacturer_content_detail', slug=manufacturer.slug, content_id=item.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Weiterlesen
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('public.manufacturer_content_list', slug=manufacturer.slug, content_type='blog') }}" 
+                       class="btn btn-primary">
+                        Alle News anzeigen
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    Noch keine News verfügbar.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.content-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.content-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+</style>
+{% endblock %}

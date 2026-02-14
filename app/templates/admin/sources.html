@@ -1,0 +1,72 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Content Quellen{% endblock %}
+{% block page_title %}Content Quellen{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-accent"></i>Neue Quelle hinzufügen</h6>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-500">URL</label>
+                    <input type="url" class="form-control" name="url" placeholder="https://..." required>
+                </div>
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-check-lg me-1"></i>Hinzufügen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Vorhandene Quellen</h6>
+            {% if sources %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in sources %}
+                        <tr>
+                            <td>
+                                <a href="{{ source.url }}" target="_blank" class="text-decoration-none">
+                                    {{ source.url[:60] }}{% if source.url|length > 60 %}...{% endif %}
+                                    <i class="bi bi-box-arrow-up-right ms-1 small"></i>
+                                </a>
+                            </td>
+                            <td>
+                                {% if source.active %}
+                                <span class="badge bg-success">Aktiv</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.delete_source', source_id=source.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Quelle löschen?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">Noch keine Quellen hinzugefügt.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

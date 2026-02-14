@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fliesen-showroom
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SCHEMA
+        sync: false
+      - key: SECRET_KEY
+        sync: false
