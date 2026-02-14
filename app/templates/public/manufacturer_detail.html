@@ -45,20 +45,6 @@
                     <span class="badge bg-secondary">{{ collections|length }}</span>
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="projects-tab" data-bs-toggle="tab" 
-                        data-bs-target="#projects" type="button" role="tab">
-                    <i class="bi bi-building"></i> Projekte 
-                    <span class="badge bg-secondary">{{ projects|length }}</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="blog-tab" data-bs-toggle="tab" 
-                        data-bs-target="#blog" type="button" role="tab">
-                    <i class="bi bi-newspaper"></i> News 
-                    <span class="badge bg-secondary">{{ blog_posts|length }}</span>
-                </button>
-            </li>
         </ul>
     </div>
 </section>
@@ -118,116 +104,6 @@
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i> 
                     Noch keine Kollektionen verfügbar.
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- Проекты -->
-            <div class="tab-pane fade" id="projects" role="tabpanel">
-                {% if projects %}
-                <div class="row g-4">
-                    {% for item in projects %}
-                    <div class="col-md-6">
-                        <div class="card content-card h-100">
-                            <div class="row g-0">
-                                {% if item.image_url %}
-                                <div class="col-md-4">
-                                    {% if item.image_url.startswith('http') %}
-                                    <img src="{{ item.image_url }}" class="img-fluid rounded-start h-100 object-fit-cover" 
-                                         alt="{{ item.title }}">
-                                    {% else %}
-                                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="img-fluid rounded-start h-100 object-fit-cover" 
-                                         alt="{{ item.title }}">
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                                
-                                <div class="{{ 'col-md-8' if item.image_url else 'col-md-12' }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ item.title }}</h5>
-                                        {% if item.description %}
-                                        <p class="card-text">{{ item.description }}</p>
-                                        {% endif %}
-                                        
-                                        <a href="{{ url_for('public.manufacturer_content_detail', slug=manufacturer.slug, content_id=item.id) }}" 
-                                           class="btn btn-sm btn-outline-primary mt-2">
-                                            <i class="bi bi-eye"></i> Projekt ansehen
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <div class="text-center mt-4">
-                    <a href="{{ url_for('public.manufacturer_content_list', slug=manufacturer.slug, content_type='project') }}" 
-                       class="btn btn-primary">
-                        Alle Projekte anzeigen
-                    </a>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> 
-                    Noch keine Projekte verfügbar.
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- Новости/Блог -->
-            <div class="tab-pane fade" id="blog" role="tabpanel">
-                {% if blog_posts %}
-                <div class="row g-4">
-                    {% for item in blog_posts %}
-                    <div class="col-md-12">
-                        <div class="card content-card">
-                            <div class="row g-0">
-                                {% if item.image_url %}
-                                <div class="col-md-3">
-                                    {% if item.image_url.startswith('http') %}
-                                    <img src="{{ item.image_url }}" class="img-fluid rounded-start h-100 object-fit-cover" 
-                                         alt="{{ item.title }}">
-                                    {% else %}
-                                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="img-fluid rounded-start h-100 object-fit-cover" 
-                                         alt="{{ item.title }}">
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                                
-                                <div class="{{ 'col-md-9' if item.image_url else 'col-md-12' }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ item.title }}</h5>
-                                        <p class="text-muted small mb-2">
-                                            <i class="bi bi-calendar"></i> 
-                                            {{ item.created_at.strftime('%d.%m.%Y') if item.created_at else 'Neu' }}
-                                        </p>
-                                        {% if item.full_content %}
-                                        <p class="card-text">{{ item.full_content[:200] }}...</p>
-                                        {% endif %}
-                                        
-                                        <a href="{{ url_for('public.manufacturer_content_detail', slug=manufacturer.slug, content_id=item.id) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Weiterlesen
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <div class="text-center mt-4">
-                    <a href="{{ url_for('public.manufacturer_content_list', slug=manufacturer.slug, content_type='blog') }}" 
-                       class="btn btn-primary">
-                        Alle News anzeigen
-                    </a>
-                </div>
-                {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> 
-                    Noch keine News verfügbar.
                 </div>
                 {% endif %}
             </div>
