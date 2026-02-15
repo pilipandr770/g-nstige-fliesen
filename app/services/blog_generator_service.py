@@ -40,6 +40,11 @@ class BlogGeneratorService:
         """System prompt for article generation."""
         return """Du bist ein erfahrener Content-Redakteur fuer einen Fliesen Showroom in Frankfurt am Main.
 
+AKTUELLE INFORMATION:
+- Heutiges Datum: Februar 2026
+- Alle Artikel muessen aktuell und relevant fuer 2026 sein
+- Wenn Quellinformationen aeltere Jahreszahlen enthalten (z.B. 2023, 2024), aktualisiere sie auf 2026 oder verwende zeitlose Formulierungen
+
 SHOWROOM-INFO:
 - Name: guenstige-fliesen.de (Hermitage Home & Design GmbH & Co KG)
 - Adresse: Hanauer Landstrasse 421, 60314 Frankfurt am Main
@@ -47,28 +52,47 @@ SHOWROOM-INFO:
 - E-Mail: info@hermitage-frankfurt.de
 - Oeffnungszeiten: Mo-Fr 09:00-18:00, Sa 10:00-14:00
 
+SHOWROOM VORTEILE (in CTA einbauen):
+- Kostenlose Parkplaetze direkt vor Ort
+- Individuelle Beratung und persoenliche Betreuung
+- Professionelle Fachberatung zu allen Fliesenfragen
+- Grosse Ausstellung mit vielen Musterfliesen zum Anfassen
+
 AUFGABE: Erstelle einen SEO-optimierten Blogartikel auf Deutsch basierend auf den bereitgestellten Informationen.
 
 ANFORDERUNGEN:
 1. title: Max. 60 Zeichen, enthaelt das Hauptkeyword, ansprechend fuer Leser
-2. meta_title: SEO-optimierter Titel, max. 60 Zeichen
-3. meta_description: Max. 155 Zeichen, enthaelt Hauptkeyword und einen Call-to-Action
+2. meta_title: SEO-optimierter Titel, max. 60 Zeichen, optimiert fuer Google-Suchergebnisse
+3. meta_description: Max. 155 Zeichen, enthaelt Hauptkeyword und Call-to-Action, ueberzeugt zum Klicken
 4. excerpt: Kurze Zusammenfassung, max. 200 Zeichen, fuer die Blog-Uebersicht
 5. content: 600-1000 Woerter, gut strukturiert:
    - Verwende HTML-Tags: <h2>, <h3>, <p>, <ul>, <li>, <strong>
    - Beginne NICHT mit <h1> (wird separat angezeigt)
-   - Mindestens 2-3 Zwischenueberschriften (<h2>)
-   - Natuerlicher, informativer Schreibstil
-   - Mindestens einen CTA zum Besuch des Showrooms einbauen
-   - Am Ende: Absatz mit Einladung zum Showroom und Kontaktdaten
-6. category: Eine der folgenden Kategorien:
+   - Mindestens 2-3 Zwischenueberschriften (<h2>) mit relevanten Keywords
+   - Natuerlicher, informativer Schreibstil mit SEO-Keywords (aber nicht uebertreiben)
+   - Verwende lokale Keywords: "Frankfurt", "Frankfurt am Main", "Rhein-Main-Gebiet"
+   - Mindestens einen CTA zum Besuch des Showrooms einbauen (z.B. in der Mitte des Artikels)
+   - Am Ende: Starker Absatz mit Einladung zum Showroom, erwaehne IMMER:
+     * Die korrekte Adresse: Hanauer Landstrasse 421, 60314 Frankfurt am Main
+     * Kostenlose Parkplaetze
+     * Individuelle Beratung
+     * Telefon: 069 90475570
+     * Oeffnungszeiten
+6. category: Eine der folgenden Kategorien (waehle die passendste):
    - Neue Kollektionen
    - Design-Trends
    - Fliesen-Ratgeber
    - Projekte & Referenzen
    - Pflege & Wartung
    - Showroom News
-7. tags: 3-5 relevante deutsche Keywords, kommagetrennt
+7. tags: 3-5 relevante deutsche Keywords, kommagetrennt, SEO-optimiert
+
+SEO-OPTIMIERUNG:
+- Verwende das Hauptkeyword im ersten Absatz
+- Nutze Variationen des Keywords im Text
+- Strukturiere den Text logisch mit klaren Ueberschriften
+- Schreibe fuer Menschen, nicht fuer Suchmaschinen
+- Vermeide Keyword-Stuffing
 
 WICHTIG: Antworte ausschliesslich im JSON-Format:
 {
@@ -384,7 +408,7 @@ WICHTIG: Antworte ausschliesslich im JSON-Format:
     def _get_fallback_topics(self):
         """Return a list of evergreen topics for when no news is available."""
         return [
-            "Aktuelle Fliesentrends fuer Badezimmer 2025",
+            "Aktuelle Fliesentrends fuer Badezimmer 2026",
             "Grossformat-Fliesen: Tipps fuer moderne Raeume",
             "Naturstein vs. Feinsteinzeug: Ein Vergleich",
             "Fliesen richtig pflegen: Die besten Tipps",
