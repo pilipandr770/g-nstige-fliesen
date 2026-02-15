@@ -18,7 +18,10 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: fliesen-redis
+          property: connectionString
 
   # Automatic blog generation: daily at 8:00 AM UTC (days controlled in admin)
   - type: cron
@@ -63,7 +66,10 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: fliesen-redis
+          property: connectionString
 
   - type: worker
     name: manufacturer-sync-worker
@@ -78,8 +84,12 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: fliesen-redis
+          property: connectionString
 
   - type: redis
     name: fliesen-redis
     plan: free
+    ipAllowList: []
