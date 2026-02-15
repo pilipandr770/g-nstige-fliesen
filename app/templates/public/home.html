@@ -165,7 +165,9 @@
                              {% else %}
                              style="background: linear-gradient(135deg, rgba(176,141,87,0.2) 0%, rgba(176,141,87,0.1) 100%);"
                              {% endif %}>
+                            {% if not collection.filename %}
                             <i class="bi bi-grid-3x3"></i>
+                            {% endif %}
                             <div class="overlay">
                                 <h5 class="mb-1">{{ collection.title }}</h5>
                                 {% if collection.subtitle %}

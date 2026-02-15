@@ -8,7 +8,8 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 from abc import ABC, abstractmethod
 import re
-from urllib.parse import urljoin, urlparse
+import html
+from urllib.parse import urljoin, urlparse, quote
 import os
 import hashlib
 from werkzeug.utils import secure_filename
@@ -2817,14 +2818,36 @@ class RocedParser(BaseManufacturerParser):
             
             collection_soup = self.fetch_page(href)
             if collection_soup:
-                img_tags = collection_soup.find_all('img')
-                for img in img_tags:
-                    src = img.get('src', '')
-                    if src and 'logo' not in src.lower():
-                        img_path = self.download_image(src)
-                        if img_path:
-                            images.append(img_path)
-                            break
+                image_url = None
+                og_image = collection_soup.find('meta', property='og:image')
+                if og_image:
+                    image_url = og_image.get('content')
+
+                if not image_url:
+                    gallery_img = collection_soup.select_one('.woocommerce-product-gallery__image img')
+                    if gallery_img:
+                        srcset = gallery_img.get('data-srcset') or gallery_img.get('srcset')
+                        if srcset:
+                            candidates = []
+                            for item in srcset.split(','):
+                                parts = item.strip().split(' ')
+                                if len(parts) == 2 and parts[1].endswith('w'):
+                                    try:
+                                        width = int(parts[1][:-1])
+                                        candidates.append((width, parts[0]))
+                                    except ValueError:
+                                        continue
+                            if candidates:
+                                image_url = max(candidates, key=lambda x: x[0])[1]
+
+                        if not image_url:
+                            image_url = gallery_img.get('data-src') or gallery_img.get('src')
+
+                if image_url and 'logo' not in image_url.lower():
+                    img_path = self.download_image(image_url)
+                    if img_path:
+                        images.append(img_path)
+
                 paras = collection_soup.find_all('p')
                 for p in paras:
                     text_content = p.get_text(strip=True)
@@ -2901,14 +2924,51 @@ class TuscaniParser(BaseManufacturerParser):
             images = []
             collection_soup = self.fetch_page(href)
             if collection_soup:
-                img_tags = collection_soup.find_all('img')
-                for img in img_tags:
-                    src = img.get('src', '')
-                    if src and 'logo' not in src.lower():
-                        img_path = self.download_image(src)
-                        if img_path:
-                            images.append(img_path)
-                            break
+                image_url = None
+                html = str(collection_soup)
+                urls = re.findall(r'https?://[^"\'\s>]+\.(?:jpg|jpeg|png|webp)', html, re.IGNORECASE)
+                seen = set()
+                unique_urls = []
+                for url in urls:
+                    if url not in seen:
+                        seen.add(url)
+                        unique_urls.append(url)
+
+                def is_bad_image(url: str) -> bool:
+                    return re.search(r'logo|favicon|icon|flag|svg', url, re.IGNORECASE) is not None
+
+                filtered = [u for u in unique_urls if not is_bad_image(u)]
+                slug = coll_name.lower()
+                slug_compact = re.sub(r'[-_\s]+', '', slug)
+                slug_parts = [part for part in re.split(r'[-_\s]+', slug) if part]
+                slug_variants = {slug, slug_compact}
+                slug_variants.update(slug_parts)
+
+                def matches_slug(url: str) -> bool:
+                    url_lower = url.lower()
+                    return any(variant and variant in url_lower for variant in slug_variants)
+
+                slug_matches = [u for u in filtered if matches_slug(u)]
+                if slug_matches:
+                    candidates = slug_matches
+                else:
+                    candidates = [u for u in filtered if 'tuscania' not in u.lower()] or filtered
+
+                if candidates:
+                    def score(url: str) -> int:
+                        score_value = 0
+                        if '/uploads/' in url:
+                            score_value += 2
+                        if re.search(r'-\d+x\d+\.(?:jpg|jpeg|png|webp)$', url, re.IGNORECASE):
+                            score_value -= 1
+                        return score_value
+
+                    image_url = sorted(candidates, key=score, reverse=True)[0]
+
+                if image_url:
+                    img_path = self.download_image(image_url)
+                    if img_path:
+                        images.append(img_path)
             collections.append({'title': coll_name, 'description': '', 'full_content': '', 'technical_specs': '', 'image_url': images[0] if images else None, 'source_url': href})
         return collections
     def extract_collection_detail(self, url: str) -> Dict:
@@ -2925,32 +2985,100 @@ class UnicomStarkerParser(BaseManufacturerParser):
         super().__init__('https://www.unicomstarker.com', 'unicom-starker')
     def extract_collections(self) -> List[Dict]:
         print("🔍 Парсинг коллекций Unicom Starker...")
-        soup = self.fetch_page(f"{self.base_url}/home")
-        if not soup:
+        endpoint = f"{self.base_url}/catalog-admin/service.action"
+        lucene_query = '+(collectionType:pietre collectionType:legni collectionType:"superfici contemporanee" collectionType:outdoor_2thick collectionType:marmi ) '
+        params = {
+            'task': 'searchNodeList',
+            'organisation': 'UNI',
+            'sortingFields': 'sorting',
+            'luceneQuery': lucene_query,
+        }
+
+        try:
+            response = requests.get(
+                endpoint,
+                params=params,
+                headers={
+                    **self.headers,
+                    'Referer': f"{self.base_url}/collections",
+                },
+                timeout=20,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            print(f"  ❌ Ошибка загрузки коллекций Unicom Starker: {str(e)}")
             return []
+
+        if not isinstance(data, list):
+            print("  ⚠️  Неожиданный формат ответа каталога")
+            return []
+
+        def get_property_text(props: Dict, *keys: str) -> str:
+            for key in keys:
+                prop = props.get(key)
+                if not prop:
+                    continue
+                for field in ('stringValue', 'stringToIndex', 'value'):
+                    value = prop.get(field)
+                    if value:
+                        return str(value).strip()
+            return ''
+
+        def get_file_value(prop: Dict) -> Optional[str]:
+            if not prop:
+                return None
+            value = prop.get('value') or prop.get('stringValue') or prop.get('stringToIndex')
+            if value:
+                return str(value)
+            value_list = prop.get('valueList') or []
+            if value_list:
+                entry = value_list[0]
+                if isinstance(entry, dict):
+                    return entry.get('value') or entry.get('stringValue') or entry.get('stringToIndex')
+            return None
+
         collections = []
-        for link in soup.find_all('a', href=lambda x: x and ('/products' in (x or '').lower() or '/collection' in (x or '').lower())):
-            href = link.get('href', '')
-            text = link.get_text(strip=True)
-            if not href or len(text) < 2:
+        for item in data:
+            name = (item.get('name') or item.get('code') or '').strip()
+            if not name:
                 continue
-            if not href.startswith('http'):
-                href = urljoin(self.base_url, href)
-            if any(c['source_url'] == href for c in collections):
-                continue
-            print(f"  🔗 Коллекция: {text}")
-            images = []
-            collection_soup = self.fetch_page(href)
-            if collection_soup:
-                img_tags = collection_soup.find_all('img')
-                for img in img_tags:
-                    src = img.get('src', '')
-                    if src and 'logo' not in src.lower():
-                        img_path = self.download_image(src)
-                        if img_path:
-                            images.append(img_path)
-                            break
-            collections.append({'title': text, 'description': '', 'full_content': '', 'technical_specs': '', 'image_url': images[0] if images else None, 'source_url': href})
+
+            props = item.get('properties') or {}
+            description = get_property_text(props, 'description__en', 'description', 'description__it')
+
+            image_path = (
+                get_file_value(props.get('frontImage'))
+                or get_file_value(props.get('coverCatalog'))
+                or get_file_value(props.get('settingImages'))
+            )
+
+            image_url = None
+            if image_path:
+                asset_base = f"{self.base_url}/catalog-portlet"
+                image_path = html.unescape(image_path)
+                if image_path.startswith('/'):
+                    image_url = f"{asset_base}{image_path}"
+                else:
+                    image_url = f"{asset_base}/{image_path}"
+                image_url = quote(image_url, safe=':/?=&%')
+
+            image_local = None
+            if image_url:
+                image_local = self.download_image(image_url)
+
+            source_url = f"{self.base_url}/collections#{item.get('id') or item.get('code') or name}"
+            print(f"  🔗 Коллекция: {name}")
+
+            collections.append({
+                'title': name,
+                'description': description[:300] if description else '',
+                'full_content': '',
+                'technical_specs': '',
+                'image_url': image_local,
+                'source_url': source_url,
+            })
+
         return collections
     def extract_collection_detail(self, url: str) -> Dict:
         return {'description': ''}
