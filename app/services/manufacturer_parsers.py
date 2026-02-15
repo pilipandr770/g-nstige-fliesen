@@ -1845,8 +1845,8 @@ class CasalgrandeParser(BaseManufacturerParser):
                     continue
                 page_url = loc.get_text(strip=True)
 
-                # Только product pages (/product/slug)
-                if '/product/' not in page_url:
+                # Accept product pages (/produkt/ for DE site, /product/ for other sites)
+                if '/produkt/' not in page_url and '/product/' not in page_url:
                     continue
 
                 title = page_url.rstrip('/').split('/')[-1].replace('-', ' ').title()
