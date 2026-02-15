@@ -3,7 +3,7 @@ services:
     name: fliesen-showroom
     runtime: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn wsgi:app"
+    startCommand: "gunicorn -c gunicorn_config.py wsgi:app"
     envVars:
       - key: DATABASE_URL
         sync: false

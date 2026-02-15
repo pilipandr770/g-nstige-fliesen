@@ -22,12 +22,21 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     
     schema = os.getenv("DB_SCHEMA")
+    engine_options = {
+        "pool_pre_ping": True,  # Test connections before using
+        "pool_recycle": 300,    # Recycle connections after 5 minutes
+        "pool_size": 5,         # Connection pool size
+        "max_overflow": 2,      # Allow 2 extra connections when pool is full
+        "connect_args": {}
+    }
+    
     if schema:
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {
-                "options": f"-csearch_path={schema}"
-            }
-        }
+        engine_options["connect_args"]["options"] = f"-csearch_path={schema}"
+    
+    # Add SSL configuration for PostgreSQL (fixes SSL decryption errors)
+    engine_options["connect_args"]["sslmode"] = "require"
+    
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_options
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
