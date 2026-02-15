@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Unsere Leistungen – Rundum-Service für Ihre Fliesen{% endblock %}
+
+{% block meta_tags %}
+<meta name="description" content="Umfassender Service rund um Ihre Fliesen: kostenlose Beratung, Lieferung, professionelle Verlegung, Musterservice. Alles aus einer Hand in Frankfurt.">
+<meta name="keywords" content="Fliesenverlegung Frankfurt, Fliesenlieferung, Beratung Fliesen, Musterservice, Fliesenleger Frankfurt">
+{% endblock %}
+
+{% block structured_data %}
+{{ super() }}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Unsere Leistungen",
+    "description": "Umfassender Service rund um Ihre Fliesen",
+    "itemListElement": [
+        {
+            "@type": "Service",
+            "name": "Individuelle Beratung",
+            "description": "Kostenlose und unverbindliche Fachberatung in unserem Showroom. Unsere Experten helfen Ihnen bei der Auswahl der perfekten Fliesen für Ihr Projekt.",
+            "provider": {
+                "@type": "LocalBusiness",
+                "name": "Hermitage Home & Design GmbH & Co KG",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "Hanauer Landstraße 421",
+                    "addressLocality": "Frankfurt am Main",
+                    "postalCode": "60314",
+                    "addressCountry": "DE"
+                },
+                "telephone": "+49-69-90475570"
+            },
+            "areaServed": {
+                "@type": "City",
+                "name": "Frankfurt am Main"
+            },
+            "serviceType": "Beratung"
+        },
+        {
+            "@type": "Service",
+            "name": "Lieferung",
+            "description": "Schnelle und zuverlässige Lieferung Ihrer Fliesen direkt zur Baustelle oder zu Ihnen nach Hause im gesamten Rhein-Main-Gebiet.",
+            "provider": {
+                "@type": "LocalBusiness",
+                "name": "Hermitage Home & Design GmbH & Co KG"
+            },
+            "areaServed": [
+                {
+                    "@type": "City",
+                    "name": "Frankfurt am Main"
+                },
+                {
+                    "@type": "State",
+                    "name": "Hessen"
+                }
+            ],
+            "serviceType": "Lieferung"
+        },
+        {
+            "@type": "Service",
+            "name": "Professionelle Verlegung",
+            "description": "Fachgerechte Verlegung durch erfahrene Fliesenleger. Wir vermitteln Ihnen qualifizierte Partner für eine perfekte Umsetzung.",
+            "provider": {
+                "@type": "LocalBusiness",
+                "name": "Hermitage Home & Design GmbH & Co KG"
+            },
+            "areaServed": {
+                "@type": "City",
+                "name": "Frankfurt am Main"
+            },
+            "serviceType": "Verlegung"
+        },
+        {
+            "@type": "Service",
+            "name": "Musterservice",
+            "description": "Nehmen Sie Muster mit nach Hause und testen Sie diese in Ihrer Umgebung. Kleine Kaution, volle Flexibilität bei der Entscheidung.",
+            "provider": {
+                "@type": "LocalBusiness",
+                "name": "Hermitage Home & Design GmbH & Co KG"
+            },
+            "areaServed": {
+                "@type": "City",
+                "name": "Frankfurt am Main"
+            },
+            "serviceType": "Musterservice"
+        }
+    ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1>Unsere Leistungen</h1>
+        <p class="lead mb-0" style="color: rgba(255,255,255,0.7);">Rundum-Service für Ihr Fliesenprojekt – alles aus einer Hand</p>
+    </div>
+</section>
+
+<!-- Main Services Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Was wir für Sie tun</h2>
+            <p class="lead text-muted">Von der ersten Idee bis zur fertigen Verlegung – wir begleiten Sie auf jedem Schritt</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Service 1: Beratung -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="service-icon mb-3" style="background: rgba(176,141,87,0.1); color: var(--accent); border-radius: 16px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-chat-dots-fill" style="font-size: 32px;"></i>
+                        </div>
+                        <h3 class="fw-bold h4">Individuelle Beratung</h3>
+                        <p class="text-muted mb-4">
+                            Kostenlose und unverbindliche Fachberatung in unserem Showroom. Unsere Experten nehmen sich Zeit für Sie und helfen Ihnen bei der Auswahl der perfekten Fliesen für Ihr Projekt.
+                        </p>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Kostenlos & unverbindlich</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Erfahrene Fachberater</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Unterstützung bei der Materialberechnung</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Stilberatung & Trendempfehlungen</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Abstimmung auf Ihr Budget</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 2: Musterservice -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="service-icon mb-3" style="background: rgba(176,141,87,0.1); color: var(--accent); border-radius: 16px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-grid-3x3-gap-fill" style="font-size: 32px;"></i>
+                        </div>
+                        <h3 class="fw-bold h4">Musterservice</h3>
+                        <p class="text-muted mb-4">
+                            Nehmen Sie Muster mit nach Hause und testen Sie diese in Ihrer Umgebung. So können Sie die Wirkung der Fliesen bei verschiedenen Lichtverhältnissen beurteilen.
+                        </p>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Muster zum Mitnehmen</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Kleine Kaution erforderlich</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Test bei Ihnen zu Hause</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Flexibilität bei der Entscheidung</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Volle Rückerstattung bei Rückgabe</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3: Lieferung -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="service-icon mb-3" style="background: rgba(176,141,87,0.1); color: var(--accent); border-radius: 16px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-truck" style="font-size: 32px;"></i>
+                        </div>
+                        <h3 class="fw-bold h4">Lieferung</h3>
+                        <p class="text-muted mb-4">
+                            Schnelle und zuverlässige Lieferung Ihrer Fliesen direkt zur Baustelle oder zu Ihnen nach Hause. Wir liefern im gesamten Rhein-Main-Gebiet.
+                        </p>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Lieferung im Rhein-Main-Gebiet</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Pünktlich & zuverlässig</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Direkt zur Baustelle</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Sorgfältiger Transport</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Flexible Liefertermine</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 4: Verlegung -->
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4">
+                        <div class="service-icon mb-3" style="background: rgba(176,141,87,0.1); color: var(--accent); border-radius: 16px; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-tools" style="font-size: 32px;"></i>
+                        </div>
+                        <h3 class="fw-bold h4">Professionelle Verlegung</h3>
+                        <p class="text-muted mb-4">
+                            Wir vermitteln Ihnen erfahrene und qualifizierte Fliesenleger aus unserem Partnernetzwerk für eine fachgerechte und perfekte Verlegung Ihrer Fliesen.
+                        </p>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Erfahrene Fliesenleger</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Fachgerechte Ausführung</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Qualitätsgarantie</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Termingerechte Umsetzung</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-accent me-2"></i>Kompetente Partnervermittlung</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Process Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">So läuft Ihr Projekt ab</h2>
+            <p class="lead text-muted">In 5 einfachen Schritten zu Ihren neuen Fliesen</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: var(--accent); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">1</div>
+                    <h5 class="fw-bold">Beratungstermin</h5>
+                    <p class="text-muted">Vereinbaren Sie einen Termin in unserem Showroom oder kommen Sie spontan vorbei.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: var(--accent); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">2</div>
+                    <h5 class="fw-bold">Fliesenauswahl</h5>
+                    <p class="text-muted">Gemeinsam finden wir die perfekten Fliesen für Ihr Projekt – passend zu Stil und Budget.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: var(--accent); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">3</div>
+                    <h5 class="fw-bold">Musterprüfung</h5>
+                    <p class="text-muted">Nehmen Sie Muster mit nach Hause und testen Sie die Wirkung in Ihrer Umgebung.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: var(--accent); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">4</div>
+                    <h5 class="fw-bold">Bestellung & Lieferung</h5>
+                    <p class="text-muted">Nach Ihrer Entscheidung bestellen wir die Fliesen und liefern sie termingerecht.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: var(--accent); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">5</div>
+                    <h5 class="fw-bold">Verlegung</h5>
+                    <p class="text-muted">Unsere Partner-Fliesenleger setzen Ihr Projekt professionell und termingerecht um.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center">
+                    <div class="process-step mx-auto mb-3" style="background: linear-gradient(135deg, #B08D57, #8B7355); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h5 class="fw-bold">Fertig!</h5>
+                    <p class="text-muted">Genießen Sie Ihre neuen, hochwertigen Fliesen!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Additional Services -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <h2 class="fw-bold text-center mb-5">Weitere Services</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <i class="bi bi-calculator-fill text-accent mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">Materialberechnung</h5>
+                    <p class="text-muted">Wir berechnen genau, wie viel Material Sie benötigen – inklusive Verschnitt.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <i class="bi bi-palette-fill text-accent mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">Stilberatung</h5>
+                    <p class="text-muted">Unsere Experten helfen Ihnen bei der Auswahl passender Farben und Designs.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <i class="bi bi-cash-coin text-accent mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">Flexible Zahlungsoptionen</h5>
+                    <p class="text-muted">Barzahlung, EC, Kreditkarte, Überweisung oder Ratenzahlung möglich.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-accent text-white">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Bereit für Ihr Fliesenprojekt?</h2>
+        <p class="lead mb-4">
+            Vereinbaren Sie jetzt einen kostenlosen Beratungstermin in unserem Showroom.<br>
+            Wir freuen uns auf Sie!
+        </p>
+        <div class="d-flex flex-wrap gap-3 justify-content-center">
+            <a href="tel:+4969904755070" class="btn btn-light btn-lg px-4">
+                <i class="bi bi-telephone-fill me-2"></i>069 90475570
+            </a>
+            <a href="{{ url_for('public.kontakt') }}" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-envelope me-2"></i>Kontaktformular
+            </a>
+        </div>
+        <p class="mt-4 mb-0 opacity-75">
+            <i class="bi bi-geo-alt-fill me-2"></i>Hanauer Landstraße 421, 60314 Frankfurt am Main<br>
+            <i class="bi bi-p-square-fill me-2"></i>Kostenlose Parkplätze direkt vor dem Showroom
+        </p>
+    </div>
+</section>
+
+{% endblock %}

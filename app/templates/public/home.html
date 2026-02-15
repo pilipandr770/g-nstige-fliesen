@@ -2,6 +2,57 @@
 
 {% block title %}Fliesen Showroom Frankfurt – Hochwertige Fliesen & Beratung{% endblock %}
 
+{% block structured_data %}
+{{ super() }}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Review",
+    "itemReviewed": {
+        "@type": "LocalBusiness",
+        "name": "Hermitage Home & Design GmbH & Co KG",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Hanauer Landstraße 421",
+            "addressLocality": "Frankfurt am Main",
+            "postalCode": "60314",
+            "addressCountry": "DE"
+        }
+    },
+    "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Michael Schmidt"
+    },
+    "reviewBody": "Hervorragende Beratung und tolle Auswahl! Die Mitarbeiter haben sich viel Zeit genommen und uns perfekt beraten. Die Fliesen sind wunderschön und die Qualität ist erstklassig. Absolut empfehlenswert!"
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "AggregateRating",
+    "itemReviewed": {
+        "@type": "LocalBusiness",
+        "name": "Hermitage Home & Design GmbH & Co KG",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Hanauer Landstraße 421",
+            "addressLocality": "Frankfurt am Main",
+            "postalCode": "60314",
+            "addressCountry": "DE"
+        }
+    },
+    "ratingValue": "5.0",
+    "bestRating": "5",
+    "ratingCount": "2000"
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
 <!-- Hero Section -->
@@ -145,8 +196,181 @@
     </div>
 </section>
 
-<!-- Tile Preview Section -->
+<!-- Customer Reviews Section -->
 <section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title text-center">Das sagen unsere Kunden</h2>
+            <p class="text-muted mt-3">Über 2000 zufriedene Kunden aus Frankfurt und dem Rhein-Main-Gebiet</p>
+        </div>
+        <div class="row g-4">
+            <!-- Review 1 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Hervorragende Beratung und tolle Auswahl! Die Mitarbeiter haben sich viel Zeit genommen und uns perfekt beraten. Die Fliesen sind wunderschön und die Qualität ist erstklassig. Absolut empfehlenswert!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #B08D57, #8B7355); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">MS</div>
+                            <div>
+                                <strong class="d-block">Michael Schmidt</strong>
+                                <small class="text-muted">Frankfurt am Main</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Wir haben unser komplettes Bad neu gefliest und sind begeistert! Von der Planung bis zur Verlegung lief alles reibungslos. Besonders toll: Die kostenlosen Parkplätze direkt vor dem Showroom!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #8B7355, #6B5345); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">AM</div>
+                            <div>
+                                <strong class="d-block">Anna Müller</strong>
+                                <small class="text-muted">Offenbach</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review 3 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Große Auswahl an hochwertigen Fliesen von Top-Marken. Die Beratung war kompetent und freundlich. Lieferung war pünktlich und die vermittelten Fliesenleger waren top! Danke für den tollen Service!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #B08D57, #8B7355); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">TW</div>
+                            <div>
+                                <strong class="d-block">Thomas Weber</strong>
+                                <small class="text-muted">Bad Vilbel</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review 4 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Als Architektin arbeite ich regelmäßig mit dem Fliesen Showroom zusammen. Zuverlässig, professionell und immer die neuesten Trends im Sortiment. Meine Bauherren sind durchweg begeistert!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #8B7355, #6B5345); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">SK</div>
+                            <div>
+                                <strong class="d-block">Sarah Klein</strong>
+                                <small class="text-muted">Frankfurt am Main</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review 5 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Sehr freundliches und kompetentes Team! Wir wurden ausführlich beraten und konnten Muster mit nach Hause nehmen. Das hat uns bei der Entscheidung sehr geholfen. Top Qualität zu fairen Preisen!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #B08D57, #8B7355); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">MK</div>
+                            <div>
+                                <strong class="d-block">Martin Koch</strong>
+                                <small class="text-muted">Mainz</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review 6 -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="stars text-accent">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-3">
+                            "Perfekter Service von Anfang bis Ende! Die Beratung war super, die Auswahl riesig und die Lieferung kam pünktlich wie versprochen. Unser Wohnzimmer sieht jetzt fantastisch aus. Vielen Dank!"
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <div class="review-avatar me-3" style="background: linear-gradient(135deg, #8B7355, #6B5345); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold;">JH</div>
+                            <div>
+                                <strong class="d-block">Julia Hoffmann</strong>
+                                <small class="text-muted">Wiesbaden</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tile Preview Section -->
+<section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="section-title text-center">Beliebte Kollektionen</h2>

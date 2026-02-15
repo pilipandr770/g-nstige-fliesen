@@ -130,6 +130,7 @@ def sitemap_xml():
         ('/', '1.0', 'weekly'),
         ('/blog', '0.9', 'daily'),
         ('/hersteller', '0.8', 'weekly'),
+        ('/leistungen', '0.7', 'monthly'),
         ('/faq', '0.7', 'monthly'),
         ('/ueber-uns', '0.6', 'monthly'),
         ('/kontakt', '0.5', 'monthly'),
@@ -277,6 +278,11 @@ def faq():
 def ueber_uns():
     """About us page"""
     return render_template("public/ueber_uns.html")
+
+@public_routes.route("/leistungen")
+def leistungen():
+    """Services page with structured data"""
+    return render_template("public/leistungen.html")
 
 @public_routes.route("/kontakt", methods=["GET", "POST"])
 def kontakt():
