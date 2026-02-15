@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Häufig gestellte Fragen (FAQ) – Fliesen Showroom Frankfurt{% endblock %}
+
+{% block meta_tags %}
+<meta name="description" content="Antworten auf häufige Fragen zu Fliesen, Beratung, Lieferung und Verlegung. Ihr Fliesen Showroom Frankfurt hilft Ihnen weiter.">
+<meta name="keywords" content="Fliesen FAQ, Fliesenberatung, Fliesen kaufen Frankfurt, Fliesenleger, Fliesen Verlegung">
+{% endblock %}
+
+{% block structured_data %}
+{{ super() }}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "Wo befindet sich Ihr Showroom in Frankfurt?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Unser Showroom befindet sich in der Hanauer Landstraße 421, 60314 Frankfurt am Main. Kostenlose Parkplätze sind direkt vor Ort verfügbar. Wir sind mit öffentlichen Verkehrsmitteln gut erreichbar."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Welche Öffnungszeiten hat der Showroom?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Wir sind Montag bis Freitag von 09:00 bis 18:00 Uhr und Samstag von 10:00 bis 14:00 Uhr für Sie da. An Sonntagen sind wir geschlossen. Terminvereinbarungen außerhalb der Öffnungszeiten sind nach Absprache möglich."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bieten Sie kostenlose Beratung an?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ja, wir bieten kostenlose und individuelle Fachberatung in unserem Showroom an. Unsere Experten helfen Ihnen bei der Auswahl der passenden Fliesen für Ihr Projekt. Eine Terminvereinbarung wird empfohlen, ist aber nicht zwingend erforderlich."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Welche Hersteller führen Sie?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Wir führen über 50 Premium-Hersteller aus Italien, Spanien und Deutschland, darunter Aparici, APE, Baldocer, Casalgrande, Dune, Exagres, Gazzini, La Fabbrica, Novoceram und viele mehr. In unserem Showroom können Sie Fliesen von führenden europäischen Marken live erleben."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bieten Sie Lieferung und Verlegung an?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ja, wir bieten umfassenden Service von der Beratung über die Lieferung bis zur fachgerechten Verlegung durch qualifizierte Partner-Fliesenleger. Sprechen Sie uns an für ein individuelles Angebot."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Kann ich Muster mit nach Hause nehmen?",
+            "acceptedAnswer": {
+                "@type": "Answer", 
+                "text": "Ja, Sie können Muster mit nach Hause nehmen, um die Fliesen in Ihrer eigenen Umgebung zu testen. Gegen eine kleine Kaution stellen wir Ihnen gerne Musterfliesen zur Verfügung."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Wie lange dauert die Lieferung?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Die Lieferzeit variiert je nach Hersteller und Verfügbarkeit. Viele Kollektionen sind ab Lager verfügbar und können innerhalb von 1-2 Wochen geliefert werden. Bei Spezialanfertigungen kann die Lieferzeit 4-8 Wochen betragen."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Benötige ich einen Termin für einen Showroom-Besuch?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ein Termin ist nicht zwingend erforderlich, wird aber empfohlen, damit wir uns ausreichend Zeit für Ihre individuelle Beratung nehmen können. Sie können spontan vorbeikommen oder einen Termin unter 069 90475570 vereinbaren."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Welche Zahlungsmethoden akzeptieren Sie?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Wir akzeptieren Barzahlung, EC-Karte, Kreditkarten und Überweisung. Bei größeren Projekten bieten wir auch flexible Zahlungspläne an."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bieten Sie auch Fliesen für Außenbereiche an?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ja, wir führen ein großes Sortiment an frostsicheren Fliesen für Terrassen, Balkone, Gartenwege und Fassaden. Unsere Berater helfen Ihnen bei der Auswahl geeigneter Outdoor-Fliesen."
+            }
+        }
+    ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1>Häufig gestellte Fragen (FAQ)</h1>
+        <p class="lead mb-0" style="color: rgba(255,255,255,0.7);">Antworten auf Ihre Fragen rund um Fliesen & Service</p>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5 bg-white">
+    <div class="container" style="max-width: 900px;">
+        
+        <div class="mb-5">
+            <p class="lead text-muted">
+                Sie haben Fragen zu unserem Showroom, Produkten oder Dienstleistungen? Hier finden Sie Antworten auf die häufigsten Fragen unserer Kunden.
+            </p>
+        </div>
+
+        <!-- Accordion -->
+        <div class="accordion" id="faqAccordion">
+            
+            <!-- FAQ 1 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        <i class="bi bi-geo-alt-fill me-2 text-accent"></i>
+                        Wo befindet sich Ihr Showroom in Frankfurt?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Unser Showroom befindet sich in der <strong>Hanauer Landstraße 421, 60314 Frankfurt am Main</strong>. <strong>Kostenlose Parkplätze</strong> sind direkt vor Ort verfügbar. Wir sind mit öffentlichen Verkehrsmitteln gut erreichbar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        <i class="bi bi-clock-fill me-2 text-accent"></i>
+                        Welche Öffnungszeiten hat der Showroom?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p>Wir sind für Sie da:</p>
+                        <ul>
+                            <li><strong>Montag bis Freitag:</strong> 09:00 – 18:00 Uhr</li>
+                            <li><strong>Samstag:</strong> 10:00 – 14:00 Uhr</li>
+                            <li><strong>Sonntag:</strong> Geschlossen</li>
+                        </ul>
+                        <p class="mb-0">Terminvereinbarungen außerhalb der Öffnungszeiten sind nach Absprache möglich.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        <i class="bi bi-chat-dots-fill me-2 text-accent"></i>
+                        Bieten Sie kostenlose Beratung an?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Ja! Wir bieten <strong>kostenlose und individuelle Fachberatung</strong> in unserem Showroom an. Unsere Experten helfen Ihnen bei der Auswahl der passenden Fliesen für Ihr Projekt. Eine Terminvereinbarung wird empfohlen, ist aber nicht zwingend erforderlich.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 4 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        <i class="bi bi-building me-2 text-accent"></i>
+                        Welche Hersteller führen Sie?
+                    </button>
+                </h2>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p>Wir führen über <strong>50 Premium-Hersteller</strong> aus Italien, Spanien und Deutschland, darunter:</p>
+                        <ul class="row row-cols-2 row-cols-md-3">
+                            <li>Aparici</li>
+                            <li>APE Ceramica</li>
+                            <li>Baldocer</li>
+                            <li>Casalgrande Padana</li>
+                            <li>Dune</li>
+                            <li>Exagres</li>
+                            <li>Gazzini</li>
+                            <li>La Fabbrica</li>
+                            <li>Novoceram</li>
+                            <li>Unicom Starker</li>
+                            <li>und viele mehr...</li>
+                        </ul>
+                        <p class="mb-0">In unserem Showroom können Sie Fliesen von führenden europäischen Marken live erleben.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 5 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                        <i class="bi bi-truck me-2 text-accent"></i>
+                        Bieten Sie Lieferung und Verlegung an?
+                    </button>
+                </h2>
+                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Ja, wir bieten <strong>umfassenden Service</strong> von der Beratung über die Lieferung bis zur fachgerechten Verlegung durch qualifizierte Partner-Fliesenleger. Sprechen Sie uns an für ein individuelles Angebot.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 6 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                        <i class="bi bi-grid-3x3-gap-fill me-2 text-accent"></i>
+                        Kann ich Muster mit nach Hause nehmen?
+                    </button>
+                </h2>
+                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Ja, Sie können <strong>Muster mit nach Hause nehmen</strong>, um die Fliesen in Ihrer eigenen Umgebung zu testen. Gegen eine kleine Kaution stellen wir Ihnen gerne Musterfliesen zur Verfügung.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 7 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                        <i class="bi bi-calendar-check me-2 text-accent"></i>
+                        Wie lange dauert die Lieferung?
+                    </button>
+                </h2>
+                <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p>Die Lieferzeit variiert je nach Hersteller und Verfügbarkeit:</p>
+                        <ul>
+                            <li><strong>Ab Lager:</strong> 1-2 Wochen</li>
+                            <li><strong>Spezialanfertigungen:</strong> 4-8 Wochen</li>
+                        </ul>
+                        <p class="mb-0">Bei Ihrer Bestellung informieren wir Sie über die genaue Lieferzeit für Ihre gewählten Fliesen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 8 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                        <i class="bi bi-telephone-fill me-2 text-accent"></i>
+                        Benötige ich einen Termin für einen Showroom-Besuch?
+                    </button>
+                </h2>
+                <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Ein Termin ist nicht zwingend erforderlich, wird aber <strong>empfohlen</strong>, damit wir uns ausreichend Zeit für Ihre individuelle Beratung nehmen können. Sie können spontan vorbeikommen oder einen Termin unter <strong><a href="tel:+4969904755070">069 90475570</a></strong> vereinbaren.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 9 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                        <i class="bi bi-credit-card-fill me-2 text-accent"></i>
+                        Welche Zahlungsmethoden akzeptieren Sie?
+                    </button>
+                </h2>
+                <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p>Wir akzeptieren:</p>
+                        <ul>
+                            <li>Barzahlung</li>
+                            <li>EC-Karte</li>
+                            <li>Kreditkarten (Visa, Mastercard)</li>
+                            <li>Überweisung</li>
+                        </ul>
+                        <p class="mb-0">Bei größeren Projekten bieten wir auch <strong>flexible Zahlungspläne</strong> an.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 10 -->
+            <div class="accordion-item border-0 mb-3 shadow-sm">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                        <i class="bi bi-house-door-fill me-2 text-accent"></i>
+                        Bieten Sie auch Fliesen für Außenbereiche an?
+                    </button>
+                </h2>
+                <div id="faq10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-0">Ja, wir führen ein großes Sortiment an <strong>frostsicheren Fliesen</strong> für Terrassen, Balkone, Gartenwege und Fassaden. Unsere Berater helfen Ihnen bei der Auswahl geeigneter Outdoor-Fliesen mit hoher Rutschfestigkeit und Frostbeständigkeit.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CTA -->
+        <div class="alert alert-accent mt-5 p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="fw-bold mb-2"><i class="bi bi-question-circle-fill me-2"></i>Ihre Frage ist nicht dabei?</h5>
+                    <p class="mb-md-0">Kontaktieren Sie uns telefonisch unter <strong>069 90475570</strong> oder besuchen Sie uns persönlich in unserem Showroom in Frankfurt. Wir beraten Sie gerne!</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ url_for('public.kontakt') }}" class="btn btn-accent btn-lg">
+                        <i class="bi bi-envelope-fill me-2"></i>Kontakt aufnehmen
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

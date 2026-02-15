@@ -130,6 +130,8 @@ def sitemap_xml():
         ('/', '1.0', 'weekly'),
         ('/blog', '0.9', 'daily'),
         ('/hersteller', '0.8', 'weekly'),
+        ('/faq', '0.7', 'monthly'),
+        ('/ueber-uns', '0.6', 'monthly'),
         ('/kontakt', '0.5', 'monthly'),
     ]
     for url, priority, changefreq in static_urls:
@@ -265,6 +267,16 @@ def manifest_json():
         ]
     }
     return jsonify(manifest)
+
+@public_routes.route("/faq")
+def faq():
+    """FAQ page with structured data"""
+    return render_template("public/faq.html")
+
+@public_routes.route("/ueber-uns")
+def ueber_uns():
+    """About us page"""
+    return render_template("public/ueber_uns.html")
 
 @public_routes.route("/kontakt", methods=["GET", "POST"])
 def kontakt():
