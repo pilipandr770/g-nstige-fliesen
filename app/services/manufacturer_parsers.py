@@ -760,68 +760,86 @@ class EquipeParser(BaseManufacturerParser):
 
         # Основная страница коллекций
         start_url = f"{self.base_url}/kollektionen"
-        page = 1
-        while True:
-            url = start_url if page == 1 else f"{start_url}/page/{page}/"
-            soup = self.fetch_page(url)
-            if not soup:
-                break
+        soup = self.fetch_page(start_url)
+        if not soup:
+            return collections
 
-            # Ищем ссылки на элементы портфолио (portfolio-item)
-            links = soup.find_all('a', href=re.compile(r'/portfolio-item/'))
-            if not links:
-                # Альтернативно ищем карточки с классом portfolio
-                links = [a for a in soup.find_all('a', href=True) if '/portfolio-item/' in a.get('href', '')]
+        # Ищем ссылки на элементы портфолио (portfolio-item)
+        links = soup.find_all('a', href=re.compile(r'/portfolio-item/'))
+        if not links:
+            # Альтернативно ищем карточки с классом portfolio
+            links = [a for a in soup.find_all('a', href=True) if '/portfolio-item/' in a.get('href', '')]
 
-            for a in links:
-                href = a.get('href')
-                if not href:
-                    continue
-                full = self.normalize_url(href)
-                if full in visited:
-                    continue
-                visited.add(full)
+        print(f"  Найдено {len(links)} ссылок на коллекции")
 
-                # Заголовок: текст ссылки или ближайший <h3>/<h2>
-                title = a.get_text(strip=True)
-                if not title:
-                    h = a.find_previous(['h2', 'h3', 'h4'])
-                    title = h.get_text(strip=True) if h else full.rstrip('/').split('/')[-1].replace('-', ' ').title()
-
-                # Изображение: внутри ссылки или в родителе
-                img = a.find('img')
-                if not img:
-                    parent = a.find_parent(['div', 'article', 'figure'])
-                    if parent:
-                        img = parent.find('img')
-
-                image_path = None
-                if img:
-                    src = img.get('src') or img.get('data-src') or img.get('data-lazy')
-                    if src and not src.startswith('data:'):
-                        image_path = self.download_image(self.normalize_url(src))
-
-                # Собираем детальную информацию
-                detail = self.extract_collection_detail(full) or {}
-
-                collections.append({
-                    'title': title,
-                    'description': detail.get('description', ''),
-                    'full_content': detail.get('full_content', ''),
-                    'technical_specs': detail.get('technical_specs', ''),
-                    'image_url': image_path or detail.get('images', [None])[0],
-                    'source_url': full
-                })
-
-            # Проверяем пагинацию: есть ли ссылка на следующую страницу
-            pager = soup.find('a', href=re.compile(r'/kollektionen/page/\d+/'))
-            if pager:
-                page += 1
-                time.sleep(0.3)
+        # Обрабатываем каждую коллекцию
+        for a in links[:20]:  # Ограничение на 20 коллекций
+            href = a.get('href')
+            if not href:
                 continue
-            break
+            full = self.normalize_url(href)
+            if full in visited:
+                continue
+            visited.add(full)
 
-        print(f"  ✅ Найдено коллекций: {len(collections)}")
+            # Заголовок: текст ссылки
+            title = a.get_text(strip=True)
+            if not title:
+                title = full.rstrip('/').split('/')[-1].replace('-', ' ').title()
+
+            print(f"  🔗 Обработка: {title}")
+
+            # Загружаем страницу коллекции для получения основного изображения
+            collection_soup = self.fetch_page(full)
+            if not collection_soup:
+                continue
+
+            # Ищем основное изображение коллекции
+            # На сайте Equipe wp-post-image - это одинаковое для всех, нужно искать featured/attachment
+            main_img = collection_soup.find('img', class_=re.compile(r'featured|attachment-', re.I))
+            if not main_img:
+                # Альтернативно - первое крупное изображение в контенте
+                content = collection_soup.find(['article', 'main', 'div'], class_=re.compile(r'content|portfolio', re.I))
+                if content:
+                    for img in content.find_all('img', limit=10):
+                        src = img.get('src', '')
+                        # Пропускаем логотипы и иконки
+                        if src and not any(x in src for x in ['logo', 'SYMB', 'SIMB', 'icon']):
+                            main_img = img
+                            break
+            
+            image_path = None
+            if main_img:
+                src = main_img.get('src') or main_img.get('data-src', '')
+                if src and 'logo' not in src.lower():
+                    # Пытаемся получить полноразмерное изображение (убираем -150x150 и подобное)
+                    src = re.sub(r'-\d+x\d+\.(jpg|jpeg|png|gif)', r'.\1', src)
+                    image_path = self.download_image(self.normalize_url(src))
+
+            if not image_path:
+                print(f"  ⚠️ Изображение не найдено для {title}")
+                continue
+
+            # Получаем описание
+            description = ""
+            meta = collection_soup.find('meta', {'name': 'description'}) or collection_soup.find('meta', {'property': 'og:description'})
+            if meta and meta.get('content'):
+                description = meta.get('content')[:300]
+
+            collections.append({
+                'title': title,
+                'description': description or f'Kollektion {title}',
+                'full_content': '',
+                'technical_specs': '',
+                'image_url': image_path,
+                'source_url': full
+            })
+
+            print(f"  ✓ Коллекция {title} добавлена")
+            
+            time.sleep(0.5)  # Задержка между запросами
+
+        print(f"  📊 Итого: {len(collections)} коллекций")
         return collections
     
     def extract_collection_detail(self, url: str) -> Dict:
