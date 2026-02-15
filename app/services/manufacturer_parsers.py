@@ -14,6 +14,7 @@ import os
 import hashlib
 from werkzeug.utils import secure_filename
 import time  # Для задержек между запросами
+from .content_processor import get_content_processor
 
 
 class BaseManufacturerParser(ABC):
@@ -25,6 +26,7 @@ class BaseManufacturerParser(ABC):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
+        self.content_processor = get_content_processor()
     
     def fetch_page(self, url: str) -> Optional[BeautifulSoup]:
         """Загружает страницу"""
@@ -178,6 +180,41 @@ class BaseManufacturerParser(ABC):
         print(f"  ⚠️  Логотип не найден")
         return None
     
+    def process_content_with_ai(self, 
+                               raw_text: str, 
+                               title: str,
+                               content_type: str = 'collection') -> Dict[str, str]:
+        """
+        Обрабатывает сырой текст через OpenAI
+        
+        Args:
+            raw_text: Сырой текст с сайта производителя
+            title: Название коллекции/проекта
+            content_type: Тип контента ('collection' или 'project')
+            
+        Returns:
+            Dict с 'description' и 'full_content'
+        """
+        try:
+            # Получаем имя производителя из slug
+            manufacturer_name = self.slug.replace('-', ' ').title()
+            
+            if content_type == 'project':
+                return self.content_processor.process_project_description(
+                    raw_text, title, manufacturer_name
+                )
+            else:  # collection
+                return self.content_processor.process_collection_description(
+                    raw_text, title, manufacturer_name
+                )
+        except Exception as e:
+            print(f"  ⚠️  Ошибка AI обработки: {str(e)}")
+            # Возвращаем базовое описание
+            return {
+                'description': f"{title} von {manufacturer_name}",
+                'full_content': f"<p>{title} – Hochwertige Fliesenkollektion.</p>"
+            }
+    
     @abstractmethod
     def extract_collections(self) -> List[Dict]:
         """Извлекает коллекции с сайта производителя"""
@@ -306,7 +343,7 @@ class ApariciParser(BaseManufacturerParser):
                     break
         
         # Ищем описание (если есть)
-        description = ""
+        raw_description = ""
         # В Aparici описания обычно минимальны, но попробуем найти
         desc_elem = soup.find('div', class_=re.compile(r'description|intro|summary', re.I))
         if desc_elem:
@@ -319,7 +356,27 @@ class ApariciParser(BaseManufacturerParser):
                     if text and len(text) > 30 and 'brauche hilfe' not in text.lower() and 'einloggen' not in text.lower():
                         desc_texts.append(text)
                 if desc_texts:
-                    description = ' '.join(desc_texts[:2])[:300]
+                    raw_description = ' '.join(desc_texts[:3])  # Берем больше текста для AI
+        
+        # Если описания нет, попробуем найти любой текстовый контент
+        if not raw_description:
+            # Ищем любые параграфы на странице
+            all_paragraphs = soup.find_all('p', limit=5)
+            for p in all_paragraphs:
+                text = p.get_text(strip=True)
+                if text and len(text) > 50 and 'cookie' not in text.lower() and 'datenschutz' not in text.lower():
+                    raw_description += text + " "
+        
+        # Обрабатываем текст через OpenAI
+        print(f"  🤖 AI обработка описания для {title}...")
+        processed_content = self.process_content_with_ai(
+            raw_text=raw_description,
+            title=title,
+            content_type='collection'
+        )
+        
+        description = processed_content['description']
+        full_content = processed_content['full_content']
         
         # Ищем технические характеристики
         specs = ""
@@ -337,18 +394,26 @@ class ApariciParser(BaseManufacturerParser):
             if specs_items:
                 specs = "\n".join(specs_items[:15])
         
-        # Собираем полный контент - берем все изображения продуктов
-        content_parts = []
+        # Собираем полный контент - добавляем изображения к AI-обработанному тексту
         product_images = soup.find_all('img', {'alt': title})
-        for img in product_images[:8]:
-            src = img.get('src') or img.get('data-src')
-            if src and 'logo' not in src.lower():
-                img_url = self.normalize_url(src)
-                content_parts.append(f'<img src="{img_url}" alt="{title}" class="img-fluid mb-3">')
+        if product_images:
+            image_html = []
+            for img in product_images[:6]:  # Максимум 6 изображений
+                src = img.get('src') or img.get('data-src')
+                if src and 'logo' not in src.lower():
+                    img_url = self.normalize_url(src)
+                    image_html.append(f'<img src="{img_url}" alt="{title}" class="img-fluid mb-3">')
+            
+            if image_html:
+                # Добавляем галерею изображений после текста
+                full_content += '\n<div class="row g-3 mt-4">\n'
+                for idx, img_tag in enumerate(image_html):
+                    full_content += f'<div class="col-md-6">{img_tag}</div>\n'
+                full_content += '</div>\n'
         
         return {
             'description': description or f'Kollektion {title}',
-            'full_content': '\n'.join(content_parts),
+            'full_content': full_content or f'<p>{description}</p>',
             'technical_specs': specs,
             'image_url': main_image
         }
@@ -420,15 +485,23 @@ class ApariciParser(BaseManufacturerParser):
                 continue
             
             # Извлекаем описание если есть
-            description = ''
+            raw_description = ''
             desc_elem = card.find('div', class_='e_projectList-content')
             if desc_elem:
-                description = desc_elem.get_text(strip=True)[:300]
+                raw_description = desc_elem.get_text(strip=True)
+            
+            # Обрабатываем через AI
+            print(f"  🤖 AI обработка проекта {title[:30]}...")
+            processed_content = self.process_content_with_ai(
+                raw_text=raw_description,
+                title=title,
+                content_type='project'
+            )
             
             projects.append({
                 'title': title,
-                'description': description,
-                'full_content': '',
+                'description': processed_content['description'],
+                'full_content': processed_content['full_content'],
                 'image_url': local_image_path or image_url,
                 'source_url': project_url
             })
