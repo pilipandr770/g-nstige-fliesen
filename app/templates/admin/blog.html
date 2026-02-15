@@ -6,7 +6,48 @@
 {% block content %}
 
 <div class="row g-4">
-    <!-- Form -->
+    <!-- AI Generate -->
+    <div class="col-12">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-robot me-2 text-accent"></i>KI-Artikel generieren</h6>
+            <form method="POST" action="{{ url_for('admin.generate_blog_post') }}">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-500 small">Thema</label>
+                        <input type="text" class="form-control" name="topic" placeholder="z.B. Neue Trends bei Grossformat-Fliesen 2025" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-500 small">Kategorie (optional)</label>
+                        <select class="form-select" name="category">
+                            <option value="">Automatisch</option>
+                            <option value="Neue Kollektionen">Neue Kollektionen</option>
+                            <option value="Design-Trends">Design-Trends</option>
+                            <option value="Fliesen-Ratgeber">Fliesen-Ratgeber</option>
+                            <option value="Projekte & Referenzen">Projekte & Referenzen</option>
+                            <option value="Pflege & Wartung">Pflege & Wartung</option>
+                            <option value="Showroom News">Showroom News</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-500 small">Hersteller (optional)</label>
+                        <select class="form-select" name="manufacturer_id">
+                            <option value="">Keiner</option>
+                            {% for m in manufacturers %}
+                            <option value="{{ m.id }}">{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-accent w-100">
+                            <i class="bi bi-magic me-1"></i>Generieren
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manual Form -->
     <div class="col-lg-5">
         <div class="card admin-card p-4">
             <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-accent"></i>Neuer Blogbeitrag</h6>
@@ -15,13 +56,63 @@
                     <label class="form-label fw-500">Titel</label>
                     <input type="text" class="form-control" name="title" placeholder="Beitragstitel" required>
                 </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-500 small">Kategorie</label>
+                        <select class="form-select form-select-sm" name="category">
+                            <option value="">Keine</option>
+                            <option value="Neue Kollektionen">Neue Kollektionen</option>
+                            <option value="Design-Trends">Design-Trends</option>
+                            <option value="Fliesen-Ratgeber">Fliesen-Ratgeber</option>
+                            <option value="Projekte & Referenzen">Projekte & Referenzen</option>
+                            <option value="Pflege & Wartung">Pflege & Wartung</option>
+                            <option value="Showroom News">Showroom News</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-500 small">Hersteller</label>
+                        <select class="form-select form-select-sm" name="manufacturer_id">
+                            <option value="">Keiner</option>
+                            {% for m in manufacturers %}
+                            <option value="{{ m.id }}">{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Tags <small class="text-muted">(kommagetrennt)</small></label>
+                    <input type="text" class="form-control" name="tags" placeholder="Fliesen, Badezimmer, Trends">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Bild-URL (optional)</label>
+                    <input type="url" class="form-control" name="image_url" placeholder="https://...">
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-500">Quelle URL (optional)</label>
                     <input type="url" class="form-control" name="source_url" placeholder="https://...">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-500">Inhalt</label>
-                    <textarea class="form-control" name="content" rows="6" placeholder="Beitragsinhalt..."></textarea>
+                    <label class="form-label fw-500">Kurzauszug</label>
+                    <input type="text" class="form-control" name="excerpt" placeholder="Kurze Zusammenfassung (max 200 Zeichen)" maxlength="200">
+                </div>
+
+                <details class="mb-3">
+                    <summary class="fw-500 small text-muted" style="cursor:pointer">SEO-Felder</summary>
+                    <div class="mt-2">
+                        <div class="mb-2">
+                            <label class="form-label fw-500 small">Meta-Titel (max. 70 Zeichen)</label>
+                            <input type="text" class="form-control form-control-sm" name="meta_title" maxlength="70">
+                        </div>
+                        <div>
+                            <label class="form-label fw-500 small">Meta-Beschreibung (max. 160 Zeichen)</label>
+                            <textarea class="form-control form-control-sm" name="meta_description" rows="2" maxlength="160"></textarea>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="mb-3">
+                    <label class="form-label fw-500">Inhalt <small class="text-muted">(HTML erlaubt)</small></label>
+                    <textarea class="form-control" name="content" rows="8" placeholder="Beitragsinhalt..."></textarea>
                 </div>
                 <button type="submit" class="btn btn-accent">
                     <i class="bi bi-check-lg me-1"></i>Veröffentlichen
@@ -30,16 +121,18 @@
         </div>
     </div>
 
-    <!-- List -->
+    <!-- Posts List -->
     <div class="col-lg-7">
         <div class="card admin-card p-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Alle Beiträge</h6>
+            <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Alle Beitraege ({{ posts|length }})</h6>
             {% if posts %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Titel</th>
+                            <th>Kategorie</th>
+                            <th>Status</th>
                             <th>Erstellt</th>
                             <th></th>
                         </tr>
@@ -48,16 +141,58 @@
                         {% for post in posts %}
                         <tr>
                             <td>
-                                {{ post.title }}
-                                {% if post.source_url %}
-                                <a href="{{ post.source_url }}" target="_blank" class="ms-1"><i class="bi bi-link-45deg small"></i></a>
+                                <div class="d-flex align-items-center">
+                                    {% if post.ai_generated %}
+                                    <i class="bi bi-robot text-accent me-2" title="KI-generiert"></i>
+                                    {% endif %}
+                                    <div>
+                                        <a href="{{ url_for('admin.edit_blog_post', post_id=post.id) }}" class="text-decoration-none fw-500">{{ post.title[:50] }}{% if post.title|length > 50 %}...{% endif %}</a>
+                                        {% if post.slug %}
+                                        <br><small class="text-muted">/blog/{{ post.slug[:30] }}{% if post.slug|length > 30 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if post.category %}
+                                <span class="badge bg-light text-dark">{{ post.category }}</span>
                                 {% endif %}
                             </td>
-                            <td class="text-muted small">{{ post.created_at.strftime('%d.%m.%Y') }}</td>
                             <td>
-                                <a href="{{ url_for('admin.delete_blog', post_id=post.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Beitrag löschen?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                                {% if post.published %}
+                                <span class="badge bg-success">Veröffentlicht</span>
+                                {% elif post.status == 'scheduled' %}
+                                <span class="badge bg-info">Geplant</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Entwurf</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ post.created_at.strftime('%d.%m.%Y') if post.created_at else '' }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    {% if post.slug %}
+                                    <a href="{{ url_for('admin.preview_blog_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary" title="Vorschau" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('admin.edit_blog_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ url_for('admin.publish_blog_post', post_id=post.id) }}" method="POST" class="d-inline">
+                                        {% if post.published %}
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Zurückziehen" onclick="return confirm('Beitrag zurückziehen?')">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Veröffentlichen">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        {% endif %}
+                                    </form>
+                                    <a href="{{ url_for('admin.delete_blog', post_id=post.id) }}" class="btn btn-sm btn-outline-danger" title="Löschen" onclick="return confirm('Beitrag löschen?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -65,7 +200,7 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-muted small mb-0">Noch keine Blogbeiträge.</p>
+            <p class="text-muted small mb-0">Noch keine Blogbeitraege.</p>
             {% endif %}
         </div>
     </div>

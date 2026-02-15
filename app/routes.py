@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, Response
 from flask_login import login_user, logout_user, login_required, current_user
-from .models import Page, BlogPost, ContentSource, ChatLog, User, ChatConfig, SocialLink, CarouselImage, HeroImage, Collection, Manufacturer, ManufacturerContent
+from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
+                     SocialLink, CarouselImage, HeroImage, Collection,
+                     Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog)
 from .services.chat_service import get_chat_service
 from .services.content_scraper_service import scraper_service
 from . import db
@@ -26,8 +28,102 @@ def home():
 
 @public_routes.route("/blog")
 def blog():
-    posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
-    return render_template("public/blog.html", posts=posts)
+    page = request.args.get('page', 1, type=int)
+    category = request.args.get('category')
+    tag = request.args.get('tag')
+
+    query = BlogPost.query.filter_by(published=True)
+
+    if category:
+        query = query.filter_by(category=category)
+    if tag:
+        query = query.filter(BlogPost.tags.contains(tag))
+
+    posts = query.order_by(BlogPost.created_at.desc()).paginate(
+        page=page, per_page=9, error_out=False
+    )
+
+    categories = db.session.query(BlogPost.category).filter(
+        BlogPost.published == True,
+        BlogPost.category.isnot(None),
+        BlogPost.category != ''
+    ).distinct().all()
+    categories = [c[0] for c in categories if c[0]]
+
+    return render_template("public/blog.html", posts=posts,
+                          categories=categories, current_category=category, current_tag=tag)
+
+@public_routes.route("/blog/<slug>")
+def blog_detail(slug):
+    post = BlogPost.query.filter_by(slug=slug, published=True).first_or_404()
+
+    post.views = (post.views or 0) + 1
+    db.session.commit()
+
+    related_posts = BlogPost.query.filter(
+        BlogPost.published == True,
+        BlogPost.id != post.id,
+        db.or_(
+            BlogPost.category == post.category,
+            BlogPost.manufacturer_id == post.manufacturer_id
+        )
+    ).order_by(BlogPost.created_at.desc()).limit(3).all()
+
+    all_categories = db.session.query(BlogPost.category).filter(
+        BlogPost.published == True,
+        BlogPost.category.isnot(None),
+        BlogPost.category != ''
+    ).distinct().all()
+    all_categories = [c[0] for c in all_categories if c[0]]
+
+    return render_template("public/blog_detail.html", post=post,
+                          related_posts=related_posts, categories=all_categories)
+
+@public_routes.route("/robots.txt")
+def robots_txt():
+    content = """User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+
+Sitemap: https://guenstige-fliesen.de/sitemap.xml
+"""
+    return Response(content, mimetype='text/plain')
+
+@public_routes.route("/sitemap.xml")
+def sitemap_xml():
+    pages = []
+
+    static_urls = [
+        ('/', '1.0', 'weekly'),
+        ('/blog', '0.9', 'daily'),
+        ('/hersteller', '0.8', 'weekly'),
+        ('/kontakt', '0.5', 'monthly'),
+    ]
+    for url, priority, changefreq in static_urls:
+        pages.append({'url': url, 'priority': priority, 'changefreq': changefreq})
+
+    posts = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).all()
+    for post in posts:
+        if post.slug:
+            pages.append({
+                'url': f'/blog/{post.slug}',
+                'priority': '0.7',
+                'changefreq': 'monthly',
+                'lastmod': post.updated_at or post.created_at
+            })
+
+    manufacturers_list = Manufacturer.query.filter_by(active=True).all()
+    for m in manufacturers_list:
+        pages.append({
+            'url': f'/hersteller/{m.slug}',
+            'priority': '0.6',
+            'changefreq': 'weekly'
+        })
+
+    xml = render_template('sitemap.xml', pages=pages)
+    return Response(xml, mimetype='application/xml')
 
 @public_routes.route("/kontakt", methods=["GET", "POST"])
 def kontakt():
@@ -217,18 +313,49 @@ def delete_page(page_id):
 @admin_routes.route("/blog", methods=["GET", "POST"])
 def manage_blog():
     if request.method == "POST":
-        title = request.form["title"]
-        content = request.form["content"]
-        source_url = request.form.get("source_url")
+        title = request.form.get("title", "").strip()
+        content = request.form.get("content", "")
+        source_url = request.form.get("source_url", "")
+        category = request.form.get("category", "")
+        tags = request.form.get("tags", "")
+        meta_title = request.form.get("meta_title", "")
+        meta_description = request.form.get("meta_description", "")
+        image_url = request.form.get("image_url", "")
+        excerpt = request.form.get("excerpt", "")
+        manufacturer_id = request.form.get("manufacturer_id")
 
-        post = BlogPost(title=title, content=content, source_url=source_url)
+        post = BlogPost(
+            title=title,
+            content=content,
+            source_url=source_url,
+            category=category,
+            tags=tags,
+            meta_title=meta_title or title[:70],
+            meta_description=meta_description or (content[:157] + '...' if len(content) > 160 else content),
+            image_url=image_url,
+            excerpt=excerpt or (content[:197] + '...' if len(content) > 200 else content),
+            manufacturer_id=int(manufacturer_id) if manufacturer_id else None,
+            status='published',
+            published=True,
+            published_at=datetime.utcnow(),
+        )
+        post.slug = post.generate_slug()
+        # Ensure unique slug
+        base_slug = post.slug
+        counter = 1
+        while BlogPost.query.filter_by(slug=post.slug).first():
+            post.slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        post.reading_time = post.calc_reading_time()
         db.session.add(post)
         db.session.commit()
         flash("Blogbeitrag veröffentlicht!", "success")
         return redirect(url_for("admin.manage_blog"))
 
     posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
-    return render_template("admin/blog.html", posts=posts)
+    manufacturers_list = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.name).all()
+    return render_template("admin/blog.html", posts=posts, manufacturers=manufacturers_list)
 
 @admin_routes.route("/blog/delete/<int:post_id>")
 def delete_blog(post_id):
@@ -237,6 +364,206 @@ def delete_blog(post_id):
     db.session.commit()
     flash("Blogbeitrag gelöscht.", "success")
     return redirect(url_for("admin.manage_blog"))
+
+@admin_routes.route("/blog/generate", methods=["POST"])
+def generate_blog_post():
+    """Generate a blog post using AI."""
+    from .services.blog_generator_service import get_blog_generator
+    generator = get_blog_generator()
+
+    topic = request.form.get("topic", "").strip()
+    category = request.form.get("category", "")
+    manufacturer_id = request.form.get("manufacturer_id")
+
+    manufacturer_name = None
+    if manufacturer_id:
+        mfr = Manufacturer.query.get(int(manufacturer_id))
+        if mfr:
+            manufacturer_name = mfr.name
+
+    if not topic:
+        flash("Bitte geben Sie ein Thema ein.", "danger")
+        return redirect(url_for("admin.manage_blog"))
+
+    result = generator.generate_from_topic(topic, category or None, manufacturer_name)
+
+    if 'error' in result:
+        flash(f"Fehler bei der Generierung: {result['error']}", "danger")
+    else:
+        post = BlogPost(
+            title=result.get('title', topic),
+            slug=result.get('slug', ''),
+            content=result.get('content', ''),
+            excerpt=result.get('excerpt', ''),
+            meta_title=result.get('meta_title', ''),
+            meta_description=result.get('meta_description', ''),
+            category=result.get('category', category),
+            tags=result.get('tags', ''),
+            manufacturer_id=int(manufacturer_id) if manufacturer_id else None,
+            ai_generated=True,
+            status='draft',
+            published=False,
+            reading_time=max(1, len(result.get('content', '').split()) // 200),
+        )
+        db.session.add(post)
+        db.session.commit()
+
+        log = BlogGenerationLog(
+            blog_post_id=post.id,
+            source_type='manual',
+            status='success',
+            tokens_used=result.get('tokens_used', 0),
+            cost_estimate=result.get('cost_estimate', 0),
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        flash(f"Entwurf '{post.title}' wurde erstellt. Bitte prüfen und veröffentlichen.", "success")
+
+    return redirect(url_for("admin.manage_blog"))
+
+@admin_routes.route("/blog/edit/<int:post_id>", methods=["GET", "POST"])
+def edit_blog_post(post_id):
+    """Edit a blog post with full SEO fields."""
+    post = BlogPost.query.get_or_404(post_id)
+
+    if request.method == "POST":
+        post.title = request.form.get("title", "")
+        post.content = request.form.get("content", "")
+        post.excerpt = request.form.get("excerpt", "")
+        post.category = request.form.get("category", "")
+        post.tags = request.form.get("tags", "")
+        post.meta_title = request.form.get("meta_title", "")
+        post.meta_description = request.form.get("meta_description", "")
+        post.image_url = request.form.get("image_url", "")
+        post.source_url = request.form.get("source_url", "")
+
+        manufacturer_id = request.form.get("manufacturer_id")
+        post.manufacturer_id = int(manufacturer_id) if manufacturer_id else None
+
+        # Regenerate slug if title changed
+        new_slug = request.form.get("slug", "").strip()
+        if new_slug and new_slug != post.slug:
+            post.slug = new_slug
+        elif not post.slug:
+            post.slug = post.generate_slug()
+            base_slug = post.slug
+            counter = 1
+            while BlogPost.query.filter(BlogPost.slug == post.slug, BlogPost.id != post.id).first():
+                post.slug = f"{base_slug}-{counter}"
+                counter += 1
+
+        post.reading_time = post.calc_reading_time()
+        db.session.commit()
+        flash(f"'{post.title}' wurde aktualisiert.", "success")
+        return redirect(url_for("admin.manage_blog"))
+
+    manufacturers_list = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.name).all()
+    return render_template("admin/blog_edit.html", post=post, manufacturers=manufacturers_list)
+
+@admin_routes.route("/blog/publish/<int:post_id>", methods=["POST"])
+def publish_blog_post(post_id):
+    """Publish or unpublish a blog post."""
+    post = BlogPost.query.get_or_404(post_id)
+    if post.published:
+        post.published = False
+        post.status = 'draft'
+        flash(f"'{post.title}' wurde zurückgezogen.", "success")
+    else:
+        post.published = True
+        post.status = 'published'
+        post.published_at = datetime.utcnow()
+        if not post.slug:
+            post.slug = post.generate_slug()
+            base_slug = post.slug
+            counter = 1
+            while BlogPost.query.filter(BlogPost.slug == post.slug, BlogPost.id != post.id).first():
+                post.slug = f"{base_slug}-{counter}"
+                counter += 1
+        flash(f"'{post.title}' wurde veröffentlicht.", "success")
+    db.session.commit()
+    return redirect(url_for("admin.manage_blog"))
+
+@admin_routes.route("/blog/preview/<int:post_id>")
+def preview_blog_post(post_id):
+    """Preview a blog post."""
+    post = BlogPost.query.get_or_404(post_id)
+    return render_template("public/blog_detail.html", post=post, related_posts=[], categories=[], preview=True)
+
+@admin_routes.route("/blog/settings", methods=["GET", "POST"])
+def blog_settings():
+    """Configure automatic blog generation settings."""
+    if request.method == "POST":
+        ChatConfig.set("blog_auto_enabled", request.form.get("auto_enabled", "off"),
+                       "Automatische Blog-Generierung aktiviert")
+        ChatConfig.set("blog_posts_per_run", request.form.get("posts_per_run", "1"),
+                       "Anzahl der Artikel pro Durchlauf")
+        ChatConfig.set("blog_auto_publish", request.form.get("auto_publish", "off"),
+                       "Automatisch veröffentlichen")
+        ChatConfig.set("blog_default_category", request.form.get("default_category", ""),
+                       "Standard-Kategorie")
+        flash("Blog-Einstellungen aktualisiert!", "success")
+        return redirect(url_for("admin.blog_settings"))
+
+    settings = {
+        'auto_enabled': ChatConfig.get("blog_auto_enabled", "off"),
+        'posts_per_run': ChatConfig.get("blog_posts_per_run", "1"),
+        'auto_publish': ChatConfig.get("blog_auto_publish", "off"),
+        'default_category': ChatConfig.get("blog_default_category", ""),
+    }
+
+    recent_logs = BlogGenerationLog.query.order_by(
+        BlogGenerationLog.created_at.desc()
+    ).limit(20).all()
+
+    return render_template("admin/blog_settings.html", settings=settings, logs=recent_logs)
+
+@admin_routes.route("/blog/sources", methods=["GET", "POST"])
+def manage_news_sources():
+    """Manage RSS feeds and news URLs for blog generation."""
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        url = request.form.get("url", "").strip()
+        source_type = request.form.get("source_type", "rss")
+        manufacturer_id = request.form.get("manufacturer_id")
+
+        if not name or not url:
+            flash("Name und URL sind erforderlich.", "danger")
+            return redirect(url_for("admin.manage_news_sources"))
+
+        source = NewsSource(
+            name=name,
+            url=url,
+            source_type=source_type,
+            manufacturer_id=int(manufacturer_id) if manufacturer_id else None,
+            active=True,
+        )
+        db.session.add(source)
+        db.session.commit()
+        flash(f"Nachrichtenquelle '{name}' hinzugefügt.", "success")
+        return redirect(url_for("admin.manage_news_sources"))
+
+    sources = NewsSource.query.order_by(NewsSource.created_at.desc()).all()
+    manufacturers_list = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.name).all()
+    return render_template("admin/news_sources.html", sources=sources, manufacturers=manufacturers_list)
+
+@admin_routes.route("/blog/sources/delete/<int:source_id>", methods=["POST"])
+def delete_news_source(source_id):
+    source = NewsSource.query.get_or_404(source_id)
+    name = source.name
+    db.session.delete(source)
+    db.session.commit()
+    flash(f"Nachrichtenquelle '{name}' gelöscht.", "success")
+    return redirect(url_for("admin.manage_news_sources"))
+
+@admin_routes.route("/blog/sources/toggle/<int:source_id>", methods=["POST"])
+def toggle_news_source(source_id):
+    source = NewsSource.query.get_or_404(source_id)
+    source.active = not source.active
+    db.session.commit()
+    status = "aktiviert" if source.active else "deaktiviert"
+    flash(f"'{source.name}' wurde {status}.", "success")
+    return redirect(url_for("admin.manage_news_sources"))
 
 @admin_routes.route("/sources", methods=["GET", "POST"])
 def manage_sources():

@@ -1,0 +1,129 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Nachrichtenquellen{% endblock %}
+{% block page_title %}Nachrichtenquellen verwalten{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Add Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2 text-accent"></i>Neue Quelle hinzufuegen</h6>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Name</label>
+                    <input type="text" class="form-control" name="name" placeholder="z.B. Ceramic World Review" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">URL</label>
+                    <input type="url" class="form-control" name="url" placeholder="https://example.com/feed.xml" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Typ</label>
+                    <select class="form-select" name="source_type">
+                        <option value="rss">RSS/Atom Feed</option>
+                        <option value="webpage">Webseite (Scraping)</option>
+                        <option value="manufacturer">Hersteller-Blog</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Hersteller (optional)</label>
+                    <select class="form-select" name="manufacturer_id">
+                        <option value="">Keiner</option>
+                        {% for m in manufacturers %}
+                        <option value="{{ m.id }}">{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Artikel werden dem Hersteller zugeordnet</small>
+                </div>
+                <button type="submit" class="btn btn-accent">
+                    <i class="bi bi-plus-lg me-1"></i>Hinzufuegen
+                </button>
+            </form>
+        </div>
+
+        <!-- Help -->
+        <div class="card admin-card p-4 mt-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-question-circle me-2"></i>Hilfe</h6>
+            <div class="small text-muted">
+                <p class="mb-2"><strong>RSS/Atom Feed:</strong> URL eines RSS-Feeds. Artikel werden automatisch abgerufen und als Grundlage fuer KI-generierte Blogbeitraege verwendet.</p>
+                <p class="mb-2"><strong>Webseite:</strong> URL einer News-Seite. Das System versucht, Artikel-Ueberschriften und Inhalte zu extrahieren.</p>
+                <p class="mb-0"><strong>Hersteller-Blog:</strong> Nutzt die vorhandenen Hersteller-Parser, um Blog-Beitraege von Herstellerwebsites zu lesen.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sources List -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-rss me-2"></i>Konfigurierte Quellen ({{ sources|length }})</h6>
+            {% if sources %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Typ</th>
+                            <th>Hersteller</th>
+                            <th>Status</th>
+                            <th>Zuletzt</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in sources %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ source.name }}</strong>
+                                    <br><small class="text-muted">{{ source.url[:50] }}{% if source.url|length > 50 %}...{% endif %}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if source.source_type == 'rss' %}
+                                <span class="badge bg-info">RSS</span>
+                                {% elif source.source_type == 'webpage' %}
+                                <span class="badge bg-secondary">Web</span>
+                                {% else %}
+                                <span class="badge bg-accent">Hersteller</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ source.manufacturer.name if source.manufacturer else '-' }}</td>
+                            <td>
+                                {% if source.active %}
+                                <span class="badge bg-success">Aktiv</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">
+                                {{ source.last_fetched.strftime('%d.%m.%Y %H:%M') if source.last_fetched else 'Nie' }}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <form action="{{ url_for('admin.toggle_news_source', source_id=source.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-{% if source.active %}warning{% else %}success{% endif %}" title="{% if source.active %}Deaktivieren{% else %}Aktivieren{% endif %}">
+                                            <i class="bi bi-{% if source.active %}pause{% else %}play{% endif %}-fill"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('admin.delete_news_source', source_id=source.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Löschen" onclick="return confirm('Quelle löschen?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">Noch keine Nachrichtenquellen konfiguriert.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

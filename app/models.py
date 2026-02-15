@@ -1,3 +1,4 @@
+import re
 from . import db
 from datetime import datetime
 from flask_login import UserMixin
@@ -35,14 +36,62 @@ class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
+    slug = db.Column(db.String(300), unique=True, index=True)
     content = db.Column(db.Text)
+    excerpt = db.Column(db.Text)
     source_url = db.Column(db.String(500))
-    category = db.Column(db.String(100))  # Neue Kollektionen, Projekte, Design-Trends, etc.
+    category = db.Column(db.String(100))
     manufacturer_id = db.Column(db.Integer, db.ForeignKey('manufacturers.id'))
     manufacturer = db.relationship('Manufacturer', backref='blog_posts')
     image_url = db.Column(db.String(500))
     published = db.Column(db.Boolean, default=True)
+
+    # SEO fields
+    meta_title = db.Column(db.String(70))
+    meta_description = db.Column(db.String(160))
+    tags = db.Column(db.String(500))
+
+    # AI generation metadata
+    ai_generated = db.Column(db.Boolean, default=False)
+    generation_prompt = db.Column(db.Text)
+    source_content = db.Column(db.Text)
+
+    # Publishing workflow
+    status = db.Column(db.String(20), default='draft')
+    scheduled_at = db.Column(db.DateTime)
+    published_at = db.Column(db.DateTime)
+
+    # Analytics
+    views = db.Column(db.Integer, default=0)
+    reading_time = db.Column(db.Integer)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def generate_slug(self):
+        """Generate URL-safe slug from title."""
+        if not self.title:
+            return ''
+        slug = self.title.lower()
+        replacements = {
+            '\u00e4': 'ae', '\u00f6': 'oe', '\u00fc': 'ue', '\u00df': 'ss',
+            '\u00c4': 'ae', '\u00d6': 'oe', '\u00dc': 'ue',
+        }
+        for char, repl in replacements.items():
+            slug = slug.replace(char, repl)
+        slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
+        return slug[:290]
+
+    def get_tags_list(self):
+        """Return tags as a list."""
+        return [t.strip() for t in (self.tags or '').split(',') if t.strip()]
+
+    def calc_reading_time(self):
+        """Calculate reading time from content length."""
+        if not self.content:
+            return 1
+        word_count = len(self.content.split())
+        return max(1, round(word_count / 200))
 
 class ContentSource(db.Model):
     __tablename__ = "content_sources"
@@ -190,3 +239,37 @@ class Collection(db.Model):
 
     def __repr__(self):
         return f"<Collection {self.title}>"
+
+
+class NewsSource(db.Model):
+    __tablename__ = "news_sources"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    source_type = db.Column(db.String(50), default='rss')
+    manufacturer_id = db.Column(db.Integer, db.ForeignKey('manufacturers.id'), nullable=True)
+    manufacturer = db.relationship('Manufacturer', backref='news_sources')
+    active = db.Column(db.Boolean, default=True)
+    last_fetched = db.Column(db.DateTime)
+    fetch_interval_hours = db.Column(db.Integer, default=24)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<NewsSource {self.name}>"
+
+
+class BlogGenerationLog(db.Model):
+    __tablename__ = "blog_generation_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    blog_post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=True)
+    blog_post = db.relationship('BlogPost', backref='generation_logs')
+    source_type = db.Column(db.String(50))
+    source_url = db.Column(db.String(500))
+    status = db.Column(db.String(20))
+    error_message = db.Column(db.Text)
+    tokens_used = db.Column(db.Integer)
+    cost_estimate = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<BlogGenerationLog {self.status} ({self.created_at})>"

@@ -1,0 +1,135 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Beitrag bearbeiten{% endblock %}
+{% block page_title %}Beitrag bearbeiten: {{ post.title[:40] }}{% if post.title|length > 40 %}...{% endif %}{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card admin-card p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Titel</label>
+                    <input type="text" class="form-control form-control-lg" name="title" value="{{ post.title or '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">URL-Slug</label>
+                    <div class="input-group">
+                        <span class="input-group-text">/blog/</span>
+                        <input type="text" class="form-control" name="slug" value="{{ post.slug or '' }}" placeholder="wird-automatisch-generiert">
+                    </div>
+                    <small class="text-muted">Leer lassen fuer automatische Generierung</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Kurzauszug</label>
+                    <textarea class="form-control" name="excerpt" rows="2" maxlength="200" placeholder="Kurze Zusammenfassung fuer die Blog-Uebersicht">{{ post.excerpt or '' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Inhalt <small class="text-muted fw-normal">(HTML erlaubt)</small></label>
+                    <textarea class="form-control" name="content" rows="20" style="font-family: monospace; font-size: 0.9rem;">{{ post.content or '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Publish Box -->
+            <div class="card admin-card p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>Veröffentlichung</h6>
+                <div class="mb-3">
+                    <span class="text-muted small">Status: </span>
+                    {% if post.published %}
+                    <span class="badge bg-success">Veröffentlicht</span>
+                    {% elif post.status == 'scheduled' %}
+                    <span class="badge bg-info">Geplant</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Entwurf</span>
+                    {% endif %}
+                    {% if post.ai_generated %}
+                    <span class="badge bg-accent ms-1"><i class="bi bi-robot me-1"></i>KI</span>
+                    {% endif %}
+                </div>
+                {% if post.views %}
+                <div class="mb-3 small text-muted">
+                    <i class="bi bi-eye me-1"></i> {{ post.views }} Aufrufe
+                </div>
+                {% endif %}
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-accent">
+                        <i class="bi bi-check-lg me-1"></i>Speichern
+                    </button>
+                    {% if post.slug %}
+                    <a href="{{ url_for('admin.preview_blog_post', post_id=post.id) }}" class="btn btn-outline-secondary" target="_blank">
+                        <i class="bi bi-eye me-1"></i>Vorschau
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('admin.manage_blog') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Zurueck
+                    </a>
+                </div>
+            </div>
+
+            <!-- Category & Tags -->
+            <div class="card admin-card p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-folder me-2"></i>Kategorie & Tags</h6>
+                <div class="mb-3">
+                    <label class="form-label fw-500 small">Kategorie</label>
+                    <select class="form-select" name="category">
+                        <option value="">Keine</option>
+                        {% for cat in ['Neue Kollektionen', 'Design-Trends', 'Fliesen-Ratgeber', 'Projekte & Referenzen', 'Pflege & Wartung', 'Showroom News'] %}
+                        <option value="{{ cat }}" {% if post.category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500 small">Tags <small class="text-muted">(kommagetrennt)</small></label>
+                    <input type="text" class="form-control" name="tags" value="{{ post.tags or '' }}" placeholder="Fliesen, Badezimmer, Trends">
+                </div>
+                <div>
+                    <label class="form-label fw-500 small">Hersteller</label>
+                    <select class="form-select" name="manufacturer_id">
+                        <option value="">Keiner</option>
+                        {% for m in manufacturers %}
+                        <option value="{{ m.id }}" {% if post.manufacturer_id == m.id %}selected{% endif %}>{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="card admin-card p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-search me-2"></i>SEO</h6>
+                <div class="mb-3">
+                    <label class="form-label fw-500 small">Meta-Titel <small class="text-muted">(max. 70)</small></label>
+                    <input type="text" class="form-control" name="meta_title" value="{{ post.meta_title or '' }}" maxlength="70">
+                    <small class="text-muted">{{ (post.meta_title or '')|length }}/70</small>
+                </div>
+                <div>
+                    <label class="form-label fw-500 small">Meta-Beschreibung <small class="text-muted">(max. 160)</small></label>
+                    <textarea class="form-control" name="meta_description" rows="3" maxlength="160">{{ post.meta_description or '' }}</textarea>
+                    <small class="text-muted">{{ (post.meta_description or '')|length }}/160</small>
+                </div>
+            </div>
+
+            <!-- Media & Source -->
+            <div class="card admin-card p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-image me-2"></i>Medien & Quelle</h6>
+                <div class="mb-3">
+                    <label class="form-label fw-500 small">Bild-URL</label>
+                    <input type="url" class="form-control" name="image_url" value="{{ post.image_url or '' }}" placeholder="https://...">
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="Vorschau" class="img-fluid mt-2 rounded" style="max-height: 150px;">
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="form-label fw-500 small">Quelle URL</label>
+                    <input type="url" class="form-control" name="source_url" value="{{ post.source_url or '' }}" placeholder="https://...">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

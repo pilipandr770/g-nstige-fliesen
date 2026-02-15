@@ -57,6 +57,83 @@ def create_app():
             db.session.commit()
             click.echo(f"Admin '{username}' created successfully!")
 
+    # CLI command: flask generate-blog
+    @app.cli.command("generate-blog")
+    @click.option("--count", default=1, help="Number of articles to generate")
+    @click.option("--category", default=None, help="Article category")
+    @click.option("--manufacturer", default=None, help="Manufacturer slug")
+    @click.option("--dry-run", is_flag=True, help="Preview without saving")
+    def generate_blog(count, category, manufacturer, dry_run):
+        """Generate blog articles using AI from collected news."""
+        from .services.blog_generator_service import get_blog_generator
+        from .models import ChatConfig
+
+        # Check if auto generation is enabled (skip check for manual CLI runs)
+        generator = get_blog_generator()
+
+        if dry_run:
+            click.echo(f"DRY RUN: Would generate {count} article(s)")
+            if manufacturer:
+                result = generator.generate_from_topic(
+                    f"Neuigkeiten von {manufacturer}",
+                    category
+                )
+            else:
+                topics = generator._get_fallback_topics()
+                result = generator.generate_from_topic(topics[0], category)
+
+            if 'error' in result:
+                click.echo(f"Error: {result['error']}")
+            else:
+                click.echo(f"Title: {result.get('title', '')}")
+                click.echo(f"Category: {result.get('category', '')}")
+                click.echo(f"Tags: {result.get('tags', '')}")
+                click.echo(f"Tokens: {result.get('tokens_used', 0)}")
+            return
+
+        results = generator.auto_generate(count=count)
+        for r in results:
+            if r.get('success'):
+                click.echo(f"Created: {r['title']} (ID: {r['id']})")
+            else:
+                click.echo(f"Error: {r.get('error', 'Unknown')}")
+
+        click.echo(f"\nDone: {sum(1 for r in results if r.get('success'))}/{count} articles generated.")
+
+    # CLI command: flask fetch-news
+    @app.cli.command("fetch-news")
+    def fetch_news():
+        """Fetch latest news from all configured sources."""
+        from .services.news_scraper_service import get_news_scraper
+
+        scraper = get_news_scraper()
+        items = scraper.fetch_all_news()
+        click.echo(f"Fetched {len(items)} news items from active sources.")
+        for item in items[:5]:
+            click.echo(f"  - {item.get('title', 'No title')[:60]}")
+
+    # CLI command: flask publish-scheduled
+    @app.cli.command("publish-scheduled")
+    def publish_scheduled():
+        """Publish blog posts that are scheduled for now or earlier."""
+        from .models import BlogPost
+        from datetime import datetime
+
+        posts = BlogPost.query.filter(
+            BlogPost.status == 'scheduled',
+            BlogPost.scheduled_at <= datetime.utcnow()
+        ).all()
+
+        count = 0
+        for post in posts:
+            post.published = True
+            post.status = 'published'
+            post.published_at = datetime.utcnow()
+            count += 1
+
+        db.session.commit()
+        click.echo(f"Published {count} scheduled post(s).")
+
     # Статичные логотипы производителей — вшиты в код, не зависят от БД
     MANUFACTURER_LOGOS = {
         'aparici':          'manufacturers/aparici_8b8cce0928.gif',
