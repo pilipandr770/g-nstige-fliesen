@@ -1752,7 +1752,7 @@ class CasalgrandeParser(BaseManufacturerParser):
     """Парсер для Casalgrande Padana"""
 
     def __init__(self):
-        super().__init__('https://www.casalgrandepadana.com', 'casalgrande')
+        super().__init__('https://www.casalgrandepadana.de', 'casalgrande')
 
     def extract_logo(self) -> Optional[str]:
         """Пытаемся найти логотип на главной странице"""
@@ -1882,25 +1882,70 @@ class CasalgrandeParser(BaseManufacturerParser):
         title_tag = soup.find(['h1', 'h2'])
         title = title_tag.get_text(strip=True) if title_tag else collection_url.rstrip('/').split('/')[-1]
 
+        # Collect images
         images = []
         for img in soup.find_all('img'):
-            src = img.get('src') or img.get('data-src')
-            if src and 'media' in src or 'filer_public' in src:
-                path = self.download_image(self.normalize_url(src))
-                if path:
-                    images.append(path)
-            if len(images) >= 8:
+            src = img.get('src') or img.get('data-src') or img.get('data-lazy')
+            if src and not src.startswith('data:'):
+                # Look for product/media images
+                if any(keyword in src.lower() for keyword in ['media', 'filer_public', 'product', 'collection', 'image']):
+                    path = self.download_image(self.normalize_url(src))
+                    if path:
+                        images.append(path)
+            if len(images) >= 10:
                 break
 
-        desc = ''
+        # Extract raw description text
+        raw_text = ''
+        
+        # Try meta description first
         meta = soup.find('meta', {'name': 'description'}) or soup.find('meta', {'property': 'og:description'})
         if meta:
-            desc = meta.get('content', '')
+            raw_text += meta.get('content', '') + ' '
+        
+        # Try to find description blocks
+        desc_blocks = soup.find_all(['div', 'section'], class_=re.compile(r'description|content|intro|text|caratteristiche', re.I))
+        for block in desc_blocks[:3]:
+            text = block.get_text(' ', strip=True)
+            if len(text) > 50:
+                raw_text += text + ' '
+        
+        # Try any paragraphs in main content
+        if not raw_text.strip():
+            paragraphs = soup.find_all('p')
+            for p in paragraphs[:5]:
+                text = p.get_text(' ', strip=True)
+                if len(text) > 30:
+                    raw_text += text + ' '
+        
+        # Process with AI
+        description = ''
+        full_content = ''
+        if raw_text.strip():
+            processed = self.process_content_with_ai(raw_text, title, 'collection')
+            if processed:
+                description = processed.get('description', '')
+                full_content = processed.get('full_content', '')
+        
+        # Fallback if AI didn't work
+        if not description and raw_text:
+            description = raw_text[:200].strip()
+        if not full_content:
+            full_content = f"<p>{raw_text.strip()}</p>" if raw_text else ''
+
+        # Integrate images into full_content
+        if images and full_content:
+            img_html = '<div class="row g-3 my-3">'
+            for idx, img_path in enumerate(images[:6]):
+                img_html += f'<div class="col-md-4"><img src="/static/uploads/{img_path}" class="img-fluid rounded" alt="{title} {idx+1}"></div>'
+            img_html += '</div>'
+            full_content = full_content + img_html
 
         return {
             'title': title,
             'url': collection_url,
-            'description': desc,
+            'description': description,
+            'full_content': full_content,
             'images': images
         }
 
@@ -1912,22 +1957,61 @@ class CasalgrandeParser(BaseManufacturerParser):
         try:
             r = requests.get(sitemap, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
             if r.status_code != 200:
+                print(f"  ⚠️  Sitemap недоступен: {r.status_code}")
                 return projects
+            
             soup = BeautifulSoup(r.content, 'xml')
             for url_tag in soup.find_all('url')[:100]:
                 loc = url_tag.find('loc')
                 if not loc:
                     continue
                 page_url = loc.get_text(strip=True)
-                title = page_url.rstrip('/').split('/')[-1].replace('-', ' ').title()
-                # try to find image
-                image_tag = url_tag.find('image:loc') or url_tag.find('image')
+                
+                # Parse project page for details
+                page_soup = self.fetch_page(page_url)
+                if not page_soup:
+                    continue
+                
+                # Extract title
+                title_tag = page_soup.find(['h1', 'h2'])
+                title = title_tag.get_text(strip=True) if title_tag else page_url.rstrip('/').split('/')[-1].replace('-', ' ').title()
+                
+                # Extract image
                 image = None
-                if image_tag:
-                    image = self.download_image(self.normalize_url(image_tag.get_text(strip=True)))
-                projects.append({'title': title, 'url': page_url, 'image_url': image, 'description': ''})
+                img_tag = page_soup.find('img', src=re.compile(r'media|filer_public|realizzazioni', re.I))
+                if img_tag:
+                    src = img_tag.get('src') or img_tag.get('data-src')
+                    if src:
+                        image = self.download_image(self.normalize_url(src))
+                
+                # Extract raw description
+                raw_text = ''
+                desc_blocks = page_soup.find_all(['div', 'section', 'article'], class_=re.compile(r'description|content|text', re.I))
+                for block in desc_blocks[:2]:
+                    text = block.get_text(' ', strip=True)
+                    if len(text) > 50:
+                        raw_text += text + ' '
+                
+                # Process with AI
+                description = ''
+                if raw_text.strip():
+                    processed = self.process_content_with_ai(raw_text, title, 'project')
+                    if processed:
+                        description = processed.get('description', '')
+                
+                if not description:
+                    description = raw_text[:200].strip() if raw_text else ''
+                
+                projects.append({
+                    'title': title,
+                    'url': page_url,
+                    'image_url': image,
+                    'description': description
+                })
+                
         except Exception as e:
-            print('  Error reading projects sitemap:', e)
+            print(f'  ❌ Ошибка чтения sitemap проектов: {e}')
+        
         print(f"  ✅ Найдено проектов: {len(projects)}")
         return projects
 
