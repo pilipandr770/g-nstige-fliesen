@@ -74,6 +74,58 @@ def create_app():
             db.session.commit()
             click.echo(f"Admin '{username}' created successfully!")
 
+    # CLI command: flask seed-manufacturers
+    @app.cli.command("seed-manufacturers")
+    def seed_manufacturers():
+        """Create or update the default manufacturer list."""
+        from .models import Manufacturer
+
+        manufacturers = [
+            {"name": "Aparici", "slug": "aparici", "website": "https://www.aparici.com/de"},
+            {"name": "APE", "slug": "ape", "website": "https://www.apegrupo.com/de/"},
+            {"name": "La Fabbrica / AVA", "slug": "lafabbrica", "website": "https://www.lafabbrica.it/de/"},
+            {"name": "Baldocer", "slug": "baldocer", "website": "https://baldocer.com/"},
+            {"name": "Casalgrande", "slug": "casalgrande", "website": "https://www.casalgrandepadana.de/"},
+            {"name": "Distrimat", "slug": "distrimat", "website": "https://www.distrimat.es/en/"},
+            {"name": "Dune", "slug": "dune", "website": "https://duneceramics.com/de"},
+            {"name": "Equipe", "slug": "equipe", "website": "https://www.equipeceramicas.com/de/"},
+            {"name": "Estudi Ceramico", "slug": "estudi-ceramico", "website": "https://eceramico.com/en/"},
+            {"name": "Etile", "slug": "etile", "website": "https://de.etile.es/"},
+            {"name": "Exagres", "slug": "exagres", "website": "https://www.exagres.es/en/"},
+            {"name": "Gazzini", "slug": "gazzini", "website": "https://www.ceramicagazzini.it/de/"},
+            {"name": "Halcon", "slug": "halcon", "website": "https://www.halconceramicas.com/"},
+            {"name": "Novoceram", "slug": "novoceram", "website": "https://www.novoceram.fr/"},
+            {"name": "Roced", "slug": "roced", "website": "https://roced.es/"},
+            {"name": "Tuscania", "slug": "tuscania", "website": "https://tuscaniagres.it/"},
+            {"name": "Unicomstarker", "slug": "unicom-starker", "website": "https://www.unicomstarker.com/home"},
+        ]
+
+        created = 0
+        updated = 0
+        for order, data in enumerate(manufacturers, start=1):
+            existing = Manufacturer.query.filter_by(slug=data["slug"]).first()
+            if existing:
+                existing.name = data["name"]
+                existing.website = data["website"]
+                existing.active = True
+                existing.auto_sync = True
+                existing.order = order
+                updated += 1
+            else:
+                manufacturer = Manufacturer(
+                    name=data["name"],
+                    slug=data["slug"],
+                    website=data["website"],
+                    active=True,
+                    auto_sync=True,
+                    order=order,
+                )
+                db.session.add(manufacturer)
+                created += 1
+
+        db.session.commit()
+        click.echo(f"Manufacturers created: {created}, updated: {updated}.")
+
     # CLI command: flask generate-blog
     @app.cli.command("generate-blog")
     @click.option("--count", default=1, help="Number of articles to generate")
