@@ -13,6 +13,7 @@ from rq.job import cancel_job
 from . import db
 import requests
 import os
+import threading
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
@@ -1171,19 +1172,24 @@ def sync_manufacturer_content(manufacturer_id):
         flash(f"Sync fuer '{manufacturer.name}' laeuft bereits.", "warning")
         return redirect(url_for("admin.manage_manufacturers"))
 
-    queue = get_sync_queue()
-    if not queue:
-        flash("REDIS_URL ist nicht gesetzt. Queue nicht verfuegbar.", "danger")
-        return redirect(url_for("admin.manage_manufacturers"))
-
     job = ManufacturerSyncJob(manufacturer_id=manufacturer.id, status="queued")
     db.session.add(job)
     db.session.commit()
 
-    rq_job = queue.enqueue(run_manufacturer_sync, job.id)
-    job.rq_job_id = rq_job.id
-    db.session.commit()
-    flash(f"Sync fuer '{manufacturer.name}' wurde in die Warteschlange gestellt.", "success")
+    queue = get_sync_queue()
+    if queue:
+        # Use Redis queue if available
+        rq_job = queue.enqueue(run_manufacturer_sync, job.id)
+        job.rq_job_id = rq_job.id
+        db.session.commit()
+        flash(f"Sync fuer '{manufacturer.name}' wurde in die Warteschlange gestellt.", "success")
+    else:
+        # Run in background thread if Redis not available
+        thread = threading.Thread(target=run_manufacturer_sync, args=(job.id,))
+        thread.daemon = True
+        thread.start()
+        flash(f"Sync fuer '{manufacturer.name}' wurde gestartet (ohne Queue).", "success")
+    
     return redirect(url_for("admin.manage_manufacturers"))
 
 
@@ -1191,14 +1197,10 @@ def sync_manufacturer_content(manufacturer_id):
 @login_required
 def sync_all_manufacturers():
     """Queue sync for all active manufacturers."""
-    queue = get_sync_queue()
-    if not queue:
-        flash("REDIS_URL ist nicht gesetzt. Queue nicht verfuegbar.", "danger")
-        return redirect(url_for("admin.manage_manufacturers"))
-
     manufacturers = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.order).all()
     queued = 0
     skipped = 0
+    queue = get_sync_queue()
 
     for manufacturer in manufacturers:
         existing = ManufacturerSyncJob.query.filter(
@@ -1212,12 +1214,22 @@ def sync_all_manufacturers():
         job = ManufacturerSyncJob(manufacturer_id=manufacturer.id, status="queued")
         db.session.add(job)
         db.session.commit()
-        rq_job = queue.enqueue(run_manufacturer_sync, job.id)
-        job.rq_job_id = rq_job.id
-        db.session.commit()
+        
+        if queue:
+            # Use Redis queue if available
+            rq_job = queue.enqueue(run_manufacturer_sync, job.id)
+            job.rq_job_id = rq_job.id
+            db.session.commit()
+        else:
+            # Run in background thread if Redis not available
+            thread = threading.Thread(target=run_manufacturer_sync, args=(job.id,))
+            thread.daemon = True
+            thread.start()
+        
         queued += 1
 
-    flash(f"In Warteschlange: {queued}, uebersprungen: {skipped}", "success")
+    mode = "Queue" if queue else "Thread"
+    flash(f"Gestartet ({mode}): {queued}, uebersprungen: {skipped}", "success")
     return redirect(url_for("admin.manage_manufacturers"))
 
 
