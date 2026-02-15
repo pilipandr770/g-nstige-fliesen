@@ -3,24 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Fliesen Showroom Frankfurt{% endblock %}</title>
+    <title>{% block title %}Fliesen Showroom Frankfurt – günstige-fliesen.de{% endblock %}</title>
 
     <!-- SEO Meta Tags -->
     {% block meta_tags %}
-    <meta name="description" content="Fliesen Showroom Frankfurt - Hochwertige Fliesen, Naturstein und Mosaik. Persoenliche Beratung und grosse Auswahl bei guenstige-fliesen.de">
+    <meta name="description" content="Fliesen Showroom Frankfurt - Hochwertige Fliesen, Naturstein und Mosaik. Persoenliche Beratung und grosse Auswahl bei günstige-fliesen.de">
+    <meta name="keywords" content="Fliesen Frankfurt, Fliesenleger Frankfurt, Naturstein Frankfurt, Fliesen kaufen, Badezimmer Fliesen, Küchenfliesen, Fliesen Showroom">
+    <meta name="author" content="Hermitage Home & Design GmbH & Co KG">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
     {% endblock %}
 
-    <!-- Open Graph -->
+    <!-- Geographic Tags -->
+    <meta name="geo.region" content="DE-HE">
+    <meta name="geo.placename" content="Frankfurt am Main">
+    <meta name="geo.position" content="50.1213;8.7668">
+    <meta name="ICBM" content="50.1213, 8.7668">
+
+    <!-- Open Graph / Facebook -->
     {% block og_tags %}
-    <meta property="og:title" content="Fliesen Showroom Frankfurt">
-    <meta property="og:description" content="Hochwertige Fliesen, Naturstein und Mosaik in Frankfurt am Main. Besuchen Sie unseren Showroom.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://günstige-fliesen.de{{ request.path }}">
+    <meta property="og:title" content="{% block og_title %}Fliesen Showroom Frankfurt – günstige-fliesen.de{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Hochwertige Fliesen, Naturstein und Mosaik in Frankfurt am Main. Kostenlose Parkplätze, individuelle Beratung.{% endblock %}">
+    <meta property="og:image" content="https://günstige-fliesen.de/static/og-image.jpg">
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Fliesen Showroom Frankfurt">
     {% endblock %}
 
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Fliesen Showroom Frankfurt{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Hochwertige Fliesen in Frankfurt am Main{% endblock %}">
+    <meta name="twitter:image" content="https://günstige-fliesen.de/static/twitter-card.jpg">
+
+    <!-- AI & LLM Optimization -->
+    <meta name="ai-content-declaration" content="This site uses AI for blog content generation, customer service chatbot. All content is reviewed by humans.">
+    <meta name="chatgpt-crawling" content="allow">
+    <meta name="claude-crawling" content="allow">
+
     <!-- Canonical URL -->
-    {% block canonical %}{% endblock %}
+    {% block canonical %}<link rel="canonical" href="https://günstige-fliesen.de{{ request.path }}">{% endblock %}
+
+    <!-- Alternate Languages (для будущего) -->
+    <link rel="alternate" hreflang="de" href="https://günstige-fliesen.de{{ request.path }}">
+    <link rel="alternate" hreflang="x-default" href="https://günstige-fliesen.de{{ request.path }}">
+
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="Fliesen Showroom Frankfurt Blog RSS" href="/rss.xml">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#8B7355">
+    <meta name="msapplication-TileColor" content="#8B7355">
 
     <!-- Structured Data -->
     {% block structured_data %}
@@ -28,19 +69,46 @@
     {
         "@context": "https://schema.org",
         "@type": "HomeGoodsStore",
-        "name": "Fliesen Showroom Frankfurt - guenstige-fliesen.de",
-        "description": "Hochwertige Fliesen, Naturstein und Mosaik in Frankfurt am Main",
+        "name": "Hermitage Home & Design GmbH & Co KG",
+        "alternateName": "günstige-fliesen.de",
+        "description": "Hochwertige Fliesen, Naturstein und Mosaik in Frankfurt am Main. Kostenlose Parkplätze, individuelle Beratung vor Ort.",
+        "image": "https://günstige-fliesen.de/static/og-image.jpg",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Hanauer Landstrasse 421",
+            "streetAddress": "Hanauer Landstraße 421",
             "addressLocality": "Frankfurt am Main",
+            "addressRegion": "Hessen",
             "postalCode": "60314",
             "addressCountry": "DE"
         },
-        "telephone": "069 90475570",
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "50.1213",
+            "longitude": "8.7668"
+        },
+        "telephone": "+49-69-90475570",
         "email": "info@hermitage-frankfurt.de",
-        "openingHours": ["Mo-Fr 09:00-18:00", "Sa 10:00-14:00"],
-        "url": "https://guenstige-fliesen.de"
+        "url": "https://günstige-fliesen.de",
+        "priceRange": "$$",
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "09:00",
+                "closes": "18:00"
+            },
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": "Saturday",
+                "opens": "10:00",
+                "closes": "14:00"
+            }
+        ],
+        "sameAs": [
+            "https://www.facebook.com/hermitage.frankfurt",
+            "https://www.instagram.com/hermitage.frankfurt"
+        ],
+        "hasMap": "https://www.google.com/maps/place/Hanauer+Landstraße+421,+60314+Frankfurt+am+Main"
     }
     </script>
     {% endblock %}

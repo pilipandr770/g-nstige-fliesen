@@ -92,7 +92,33 @@ Disallow: /admin/
 Disallow: /auth/
 Disallow: /api/
 
-Sitemap: https://guenstige-fliesen.de/sitemap.xml
+# Специальные правила для Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+
+# Правила для Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+
+# AI Crawlers (ChatGPT, Claude, etc.)
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Claude-Web
+Allow: /
+
+# Карты сайта
+Sitemap: https://günstige-fliesen.de/sitemap.xml
+Sitemap: https://günstige-fliesen.de/blog-sitemap.xml
+
+# Общая информация
+Host: https://günstige-fliesen.de
 """
     return Response(content, mimetype='text/plain')
 
@@ -129,6 +155,116 @@ def sitemap_xml():
 
     xml = render_template('sitemap.xml', pages=pages)
     return Response(xml, mimetype='application/xml')
+
+@public_routes.route("/blog-sitemap.xml")
+def blog_sitemap():
+    """Специальная карта сайта для блога (для лучшей индексации)."""
+    posts = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).all()
+    pages = []
+    for post in posts:
+        if post.slug:
+            pages.append({
+                'url': f'/blog/{post.slug}',
+                'priority': '0.8',
+                'changefreq': 'monthly',
+                'lastmod': post.updated_at or post.created_at
+            })
+    
+    xml = render_template('sitemap.xml', pages=pages)
+    return Response(xml, mimetype='application/xml')
+
+@public_routes.route("/rss.xml")
+@public_routes.route("/feed.xml")
+def rss_feed():
+    """RSS feed для блога."""
+    posts = BlogPost.query.filter_by(published=True).order_by(BlogPost.created_at.desc()).limit(20).all()
+    
+    rss = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+    <title>Fliesen Showroom Frankfurt Blog</title>
+    <link>https://günstige-fliesen.de/blog</link>
+    <description>Aktuelle News, Trends und Ratgeber rund um Fliesen, Design und Raumgestaltung</description>
+    <language>de-DE</language>
+    <atom:link href="https://günstige-fliesen.de/rss.xml" rel="self" type="application/rss+xml"/>
+"""
+    for post in posts:
+        pub_date = post.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT') if post.created_at else ''
+        rss += f"""
+    <item>
+        <title>{post.title}</title>
+        <link>https://günstige-fliesen.de/blog/{post.slug}</link>
+        <description>{post.excerpt or post.meta_description or ''}</description>
+        <pubDate>{pub_date}</pubDate>
+        <guid>https://günstige-fliesen.de/blog/{post.slug}</guid>
+    </item>"""
+    
+    rss += """
+</channel>
+</rss>"""
+    return Response(rss, mimetype='application/xml')
+
+@public_routes.route("/humans.txt")
+def humans_txt():
+    """Информация о команде и технологиях."""
+    content = """/* TEAM */
+    
+Website: Hermitage Home & Design GmbH & Co KG
+Location: Frankfurt am Main, Deutschland
+Contact: info@hermitage-frankfurt.de
+
+/* THANKS */
+
+Flask Framework
+OpenAI GPT-4
+Bootstrap 5
+PostgreSQL
+
+/* SITE */
+
+Last update: 2026/02/15
+Language: Deutsch / German
+Standards: HTML5, CSS3, RSS
+Components: Flask, SQLAlchemy, Redis, RQ
+AI: ChatGPT, Blog Generator
+"""
+    return Response(content, mimetype='text/plain')
+
+@public_routes.route("/.well-known/security.txt")
+@public_routes.route("/security.txt")
+def security_txt():
+    """Информация для исследователей безопасности."""
+    content = """Contact: mailto:info@hermitage-frankfurt.de
+Preferred-Languages: de, en
+Canonical: https://günstige-fliesen.de/.well-known/security.txt
+"""
+    return Response(content, mimetype='text/plain')
+
+@public_routes.route("/manifest.json")
+def manifest_json():
+    """Web App Manifest для PWA."""
+    manifest = {
+        "name": "Fliesen Showroom Frankfurt",
+        "short_name": "Fliesen FFM",
+        "description": "Hochwertige Fliesen in Frankfurt am Main - günstige-fliesen.de",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#8B7355",
+        "icons": [
+            {
+                "src": "/static/icon-192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/icon-512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    }
+    return jsonify(manifest)
 
 @public_routes.route("/kontakt", methods=["GET", "POST"])
 def kontakt():

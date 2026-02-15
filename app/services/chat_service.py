@@ -19,7 +19,7 @@ class ChatBotService:
         base_prompt = """Du bist ein hilfreicher Kundenservice-Assistent für einen Fliesen Showroom in Frankfurt.
 
 UNTERNEHMENSINFO:
-Name: guenstige-fliesen.de (Hermitage Home & Design GmbH & Co KG)
+Name: günstige-fliesen.de (Hermitage Home & Design GmbH & Co KG)
 Adresse: Hanauer Landstrasse 421, 60314 Frankfurt am Main
 Telefon: 069 90475570
 E-Mail: info@hermitage-frankfurt.de

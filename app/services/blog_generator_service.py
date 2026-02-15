@@ -46,7 +46,7 @@ AKTUELLE INFORMATION:
 - Wenn Quellinformationen aeltere Jahreszahlen enthalten (z.B. 2023, 2024), aktualisiere sie auf 2026 oder verwende zeitlose Formulierungen
 
 SHOWROOM-INFO:
-- Name: guenstige-fliesen.de (Hermitage Home & Design GmbH & Co KG)
+- Name: günstige-fliesen.de (Hermitage Home & Design GmbH & Co KG)
 - Adresse: Hanauer Landstrasse 421, 60314 Frankfurt am Main
 - Telefon: 069 90475570
 - E-Mail: info@hermitage-frankfurt.de
