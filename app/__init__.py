@@ -14,7 +14,13 @@ def create_app():
 
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+    
+    # Convert DATABASE_URL to use psycopg driver for SQLAlchemy
+    database_url = os.getenv("DATABASE_URL")
+    if database_url and database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    
     schema = os.getenv("DB_SCHEMA")
     if schema:
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
