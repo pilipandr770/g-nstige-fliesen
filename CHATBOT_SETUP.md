@@ -93,12 +93,12 @@ fetch('/api/chat', {
 
 ## Fallback (когда API недоступен)
 
-Если OpenAI API не сконфигурирован или произошла ошибка, чатбот вернёт:
+Если OpenAI API не сконфигурирован oder произошла ошибка, чатбот вернёт:
 
 ```
 "Vielen Dank für Ihre Anfrage! Leider kann unser Chat gerade keine KI-gestützte Antwort
-generieren. Bitte kontaktieren Sie uns direkt: +49 69 123 456 78 oder
-info@fliesen-showroom.de. Wir helfen Ihnen gerne weiter!"
+generieren. Bitte kontaktieren Sie uns direkt: 069 90475570 oder
+info@hermitage-frankfurt.de. Wir helfen Ihnen gerne weiter!"
 ```
 
 ## Тестирование

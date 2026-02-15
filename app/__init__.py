@@ -68,7 +68,7 @@ def create_app():
     # CLI command: flask create-admin
     @app.cli.command("create-admin")
     @click.option("--username", default="admin", help="Admin username")
-    @click.option("--email", default="admin@fliesen-showroom.de", help="Admin email")
+    @click.option("--email", default="admin@hermitage-frankfurt.de", help="Admin email")
     @click.option("--password", default="admin123", help="Admin password")
     def create_admin(username, email, password):
         """Create an admin user."""
