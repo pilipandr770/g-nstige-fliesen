@@ -2,9 +2,14 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
                      SocialLink, CarouselImage, HeroImage, Collection,
-                     Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog)
+                     Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog,
+                     ManufacturerSyncJob)
 from .services.chat_service import get_chat_service
 from .services.content_scraper_service import scraper_service
+from .services.sync_queue import get_sync_queue, get_redis_url
+from .services.sync_jobs import run_manufacturer_sync
+from redis import Redis
+from rq.job import cancel_job
 from . import db
 import requests
 import os
@@ -500,16 +505,23 @@ def blog_settings():
                        "Anzahl der Artikel pro Durchlauf")
         ChatConfig.set("blog_auto_publish", request.form.get("auto_publish", "off"),
                        "Automatisch veröffentlichen")
+        auto_days = request.form.getlist("auto_days")
+        auto_days_value = ",".join(sorted(auto_days)) if auto_days else ""
+        ChatConfig.set("blog_auto_days", auto_days_value,
+                       "Wochentage fuer automatische Generierung (1=Mo ... 7=So)")
         ChatConfig.set("blog_default_category", request.form.get("default_category", ""),
                        "Standard-Kategorie")
         flash("Blog-Einstellungen aktualisiert!", "success")
         return redirect(url_for("admin.blog_settings"))
 
+    auto_days_value = ChatConfig.get("blog_auto_days", "1,3,5")
+    auto_days = {d.strip() for d in auto_days_value.split(",") if d.strip()}
     settings = {
         'auto_enabled': ChatConfig.get("blog_auto_enabled", "off"),
         'posts_per_run': ChatConfig.get("blog_posts_per_run", "1"),
         'auto_publish': ChatConfig.get("blog_auto_publish", "off"),
         'default_category': ChatConfig.get("blog_default_category", ""),
+        'auto_days': auto_days,
     }
 
     recent_logs = BlogGenerationLog.query.order_by(
@@ -517,6 +529,60 @@ def blog_settings():
     ).limit(20).all()
 
     return render_template("admin/blog_settings.html", settings=settings, logs=recent_logs)
+
+
+@admin_routes.route("/blog/settings/generate-now", methods=["POST"])
+def blog_generate_now():
+    """Generate blog posts immediately using current settings."""
+    from .services.blog_generator_service import get_blog_generator
+
+    posts_per_run = int(ChatConfig.get("blog_posts_per_run", "1"))
+    auto_publish = ChatConfig.get("blog_auto_publish", "off") == "on"
+
+    generator = get_blog_generator()
+    results = generator.auto_generate(count=posts_per_run)
+
+    published_count = 0
+    if auto_publish:
+        for result in results:
+            if not result.get("success"):
+                continue
+            post = BlogPost.query.get(result.get("id"))
+            if post and not post.published:
+                post.published = True
+                post.status = 'published'
+                post.published_at = datetime.utcnow()
+                published_count += 1
+        db.session.commit()
+
+    success_count = sum(1 for r in results if r.get("success"))
+    error_count = len(results) - success_count
+    if auto_publish:
+        flash(f"Generiert: {success_count}, veröffentlicht: {published_count}, Fehler: {error_count}", "success")
+    else:
+        flash(f"Generiert: {success_count}, Fehler: {error_count}", "success")
+
+    return redirect(url_for("admin.blog_settings"))
+
+
+@admin_routes.route("/blog/settings/publish-now", methods=["POST"])
+def blog_publish_now():
+    """Publish scheduled posts immediately."""
+    posts = BlogPost.query.filter(
+        BlogPost.status == 'scheduled',
+        BlogPost.scheduled_at <= datetime.utcnow()
+    ).all()
+
+    count = 0
+    for post in posts:
+        post.published = True
+        post.status = 'published'
+        post.published_at = datetime.utcnow()
+        count += 1
+
+    db.session.commit()
+    flash(f"Veröffentlicht: {count}", "success")
+    return redirect(url_for("admin.blog_settings"))
 
 @admin_routes.route("/blog/sources", methods=["GET", "POST"])
 def manage_news_sources():
@@ -906,7 +972,21 @@ def manage_manufacturers():
             return redirect(url_for("admin.manage_manufacturers"))
     
     manufacturers = Manufacturer.query.order_by(Manufacturer.order).all()
-    return render_template("admin/manufacturers.html", manufacturers=manufacturers)
+    latest_jobs = {}
+    if manufacturers:
+        manufacturer_ids = [m.id for m in manufacturers]
+        jobs = ManufacturerSyncJob.query.filter(
+            ManufacturerSyncJob.manufacturer_id.in_(manufacturer_ids)
+        ).order_by(ManufacturerSyncJob.created_at.desc()).all()
+        for job in jobs:
+            if job.manufacturer_id not in latest_jobs:
+                latest_jobs[job.manufacturer_id] = job
+
+    return render_template(
+        "admin/manufacturers.html",
+        manufacturers=manufacturers,
+        latest_jobs=latest_jobs,
+    )
 
 @admin_routes.route("/manufacturers/delete/<int:manufacturer_id>", methods=["POST"])
 @login_required
@@ -926,119 +1006,101 @@ def delete_manufacturer(manufacturer_id):
 @admin_routes.route("/manufacturers/<int:manufacturer_id>/sync", methods=["POST"])
 @login_required
 def sync_manufacturer_content(manufacturer_id):
-    """Синхронизация контента производителя с его сайта"""
+    """Queue manufacturer sync to run sequentially in background."""
     manufacturer = Manufacturer.query.get_or_404(manufacturer_id)
-    
-    try:
-        print(f"\n🔄 Начало синхронизации контента для {manufacturer.name}")
-        
-        # Извлекаем контент (уже с полными данными)
-        all_content = scraper_service.extract_all_content(manufacturer.slug)
-        
-        count_added = 0
-        count_skipped = 0
-        
-        # Сохраняем коллекции (только с изображениями!)
-        collections = all_content.get('collections', [])
-        print(f"\n📦 Обработка коллекций: {len(collections)}")
-        for item in collections:
-            # ВАЛИДАЦИЯ: Пропускаем коллекции без изображений
-            if not item.get('image_url'):
-                print(f"  ⚠️  Пропущена коллекция без изображения: {item.get('title', 'Без названия')}")
-                count_skipped += 1
-                continue
-            
-            # Проверяем что title тоже есть
-            if not item.get('title') or len(item.get('title', '')) < 2:
-                print(f"  ⚠️  Пропущена коллекция без названия")
-                count_skipped += 1
-                continue
-            
-            content = ManufacturerContent(
-                manufacturer_id=manufacturer.id,
-                content_type='collection',
-                title=item.get('title', ''),
-                description=item.get('description', ''),
-                full_content=item.get('full_content', ''),
-                technical_specs=item.get('technical_specs', ''),
-                image_url=item.get('image_url', ''),
-                source_url=item.get('source_url', ''),
-                published=True
-            )
-            db.session.add(content)
-            count_added += 1
-            print(f"  ✓ Добавлена коллекция: {item.get('title', '')}")
-        
-        # Сохраняем проекты (только с изображениями!)
-        projects = all_content.get('projects', [])
-        print(f"\n🏗️  Обработка проектов: {len(projects)}")
-        for item in projects:
-            # ВАЛИДАЦИЯ: Пропускаем проекты без изображений
-            if not item.get('image_url'):
-                print(f"  ⚠️  Пропущен проект без изображения: {item.get('title', 'Без названия')}")
-                count_skipped += 1
-                continue
-            
-            if not item.get('title') or len(item.get('title', '')) < 2:
-                print(f"  ⚠️  Пропущен проект без названия")
-                count_skipped += 1
-                continue
-            
-            content = ManufacturerContent(
-                manufacturer_id=manufacturer.id,
-                content_type='project',
-                title=item.get('title', ''),
-                description=item.get('description', ''),
-                full_content=item.get('full_content', ''),
-                technical_specs=item.get('technical_specs', ''),
-                image_url=item.get('image_url', ''),
-                source_url=item.get('source_url', ''),
-                published=True
-            )
-            db.session.add(content)
-            count_added += 1
-            print(f"  ✓ Добавлен проект: {item.get('title', '')}")
-        
-        # Сохраняем блог посты
-        blog_posts = all_content.get('blog_posts', [])
-        print(f"\n📝 Обработка статей блога: {len(blog_posts)}")
-        for item in blog_posts:
-            # Для блога изображение необязательно, но название обязательно
-            if not item.get('title') or len(item.get('title', '')) < 2:
-                count_skipped += 1
-                continue
-            
-            content = ManufacturerContent(
-                manufacturer_id=manufacturer.id,
-                content_type='blog',
-                title=item.get('title', ''),
-                description=item.get('content', ''),
-                full_content=item.get('full_content', item.get('content', '')),
-                image_url=item.get('image_url', ''),
-                source_url=item.get('source_url', ''),
-                published=True
-            )
-            db.session.add(content)
-            count_added += 1
-            print(f"  ✓ Добавлена статья: {item.get('title', '')}")
-        
-        # Обновляем время последней синхронизации
-        manufacturer.last_sync = datetime.utcnow()
-        db.session.commit()
-        
-        print(f"\n✅ Синхронизация завершена:")
-        print(f"   ✓ Добавлено: {count_added} элементов")
-        print(f"   ⚠️  Пропущено: {count_skipped} элементов (без изображений или названия)")
-        
-        flash(f"Inhalt von '{manufacturer.name}' wurde erfolgreich synchronisiert. {count_added} Einträge hinzugefügt, {count_skipped} übersprungen.", "success")
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Ошибка при синхронизации: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        flash(f"Fehler bei der Synchronisierung: {str(e)}", "danger")
-    
+
+    existing = ManufacturerSyncJob.query.filter(
+        ManufacturerSyncJob.manufacturer_id == manufacturer.id,
+        ManufacturerSyncJob.status.in_(["queued", "running"]),
+    ).first()
+    if existing:
+        flash(f"Sync fuer '{manufacturer.name}' laeuft bereits.", "warning")
+        return redirect(url_for("admin.manage_manufacturers"))
+
+    queue = get_sync_queue()
+    if not queue:
+        flash("REDIS_URL ist nicht gesetzt. Queue nicht verfuegbar.", "danger")
+        return redirect(url_for("admin.manage_manufacturers"))
+
+    job = ManufacturerSyncJob(manufacturer_id=manufacturer.id, status="queued")
+    db.session.add(job)
+    db.session.commit()
+
+    rq_job = queue.enqueue(run_manufacturer_sync, job.id)
+    job.rq_job_id = rq_job.id
+    db.session.commit()
+    flash(f"Sync fuer '{manufacturer.name}' wurde in die Warteschlange gestellt.", "success")
     return redirect(url_for("admin.manage_manufacturers"))
+
+
+@admin_routes.route("/manufacturers/sync-all", methods=["POST"])
+@login_required
+def sync_all_manufacturers():
+    """Queue sync for all active manufacturers."""
+    queue = get_sync_queue()
+    if not queue:
+        flash("REDIS_URL ist nicht gesetzt. Queue nicht verfuegbar.", "danger")
+        return redirect(url_for("admin.manage_manufacturers"))
+
+    manufacturers = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.order).all()
+    queued = 0
+    skipped = 0
+
+    for manufacturer in manufacturers:
+        existing = ManufacturerSyncJob.query.filter(
+            ManufacturerSyncJob.manufacturer_id == manufacturer.id,
+            ManufacturerSyncJob.status.in_(["queued", "running"]),
+        ).first()
+        if existing:
+            skipped += 1
+            continue
+
+        job = ManufacturerSyncJob(manufacturer_id=manufacturer.id, status="queued")
+        db.session.add(job)
+        db.session.commit()
+        rq_job = queue.enqueue(run_manufacturer_sync, job.id)
+        job.rq_job_id = rq_job.id
+        db.session.commit()
+        queued += 1
+
+    flash(f"In Warteschlange: {queued}, uebersprungen: {skipped}", "success")
+    return redirect(url_for("admin.manage_manufacturers"))
+
+
+@admin_routes.route("/sync-jobs")
+@login_required
+def sync_jobs():
+    jobs = ManufacturerSyncJob.query.order_by(ManufacturerSyncJob.created_at.desc()).limit(100).all()
+    return render_template("admin/sync_jobs.html", jobs=jobs)
+
+
+@admin_routes.route("/sync-jobs/<int:job_id>")
+@login_required
+def sync_job_detail(job_id):
+    job = ManufacturerSyncJob.query.get_or_404(job_id)
+    return render_template("admin/sync_job_detail.html", job=job)
+
+
+@admin_routes.route("/sync-jobs/<int:job_id>/cancel", methods=["POST"])
+@login_required
+def cancel_sync_job(job_id):
+    job = ManufacturerSyncJob.query.get_or_404(job_id)
+
+    if job.status != "queued":
+        flash("Nur Jobs in der Warteschlange koennen abgebrochen werden.", "warning")
+        return redirect(url_for("admin.sync_job_detail", job_id=job.id))
+
+    redis_url = get_redis_url()
+    if redis_url and job.rq_job_id:
+        cancel_job(job.rq_job_id, connection=Redis.from_url(redis_url))
+
+    job.status = "canceled"
+    job.finished_at = datetime.utcnow()
+    job.error_message = "Canceled by user"
+    db.session.commit()
+
+    flash("Job wurde abgebrochen.", "success")
+    return redirect(url_for("admin.sync_job_detail", job_id=job.id))
 
 # ---------------------- API CHATBOT ----------------------
 

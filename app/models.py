@@ -181,6 +181,30 @@ class Manufacturer(db.Model):
         return f"<Manufacturer {self.name}>"
 
 
+class ManufacturerSyncJob(db.Model):
+    __tablename__ = "manufacturer_sync_jobs"
+    id = db.Column(db.Integer, primary_key=True)
+    manufacturer_id = db.Column(db.Integer, db.ForeignKey('manufacturers.id'), nullable=False)
+    manufacturer = db.relationship('Manufacturer', backref='sync_jobs')
+
+    rq_job_id = db.Column(db.String(50))
+
+    status = db.Column(db.String(20), default='queued')
+    total_steps = db.Column(db.Integer, default=0)
+    completed_steps = db.Column(db.Integer, default=0)
+    added_count = db.Column(db.Integer, default=0)
+    skipped_count = db.Column(db.Integer, default=0)
+    error_message = db.Column(db.Text)
+    log = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    started_at = db.Column(db.DateTime)
+    finished_at = db.Column(db.DateTime)
+
+    def __repr__(self):
+        return f"<ManufacturerSyncJob {self.id} {self.status}>"
+
+
 class ManufacturerContent(db.Model):
     __tablename__ = "manufacturer_content"
     id = db.Column(db.Integer, primary_key=True)

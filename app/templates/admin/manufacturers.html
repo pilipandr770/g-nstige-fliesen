@@ -81,7 +81,19 @@
     <div class="col-md-7">
         <div class="card">
             <div class="card-header">
-                <h5>Alle Hersteller</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Alle Hersteller</h5>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('admin.sync_jobs') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-list-task"></i> Jobs
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.sync_all_manufacturers') }}" onsubmit="return confirm('Alle aktiven Hersteller in die Warteschlange stellen?');">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-arrow-repeat"></i> Alle synchronisieren
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 {% if manufacturers %}
@@ -99,6 +111,7 @@
                         </thead>
                         <tbody>
                             {% for manufacturer in manufacturers %}
+                            {% set job = latest_jobs.get(manufacturer.id) %}
                             <tr>
                                 <td>
                                     {% set logo_path = manufacturer_logos.get(manufacturer.slug, '') %}
@@ -138,11 +151,11 @@
                                             <i class="bi bi-files"></i>
                                         </a>
                                         
-                                        <form method="POST" action="{{ url_for('admin.sync_manufacturer_content', manufacturer_id=manufacturer.id) }}" 
-                                              style="display: inline;" 
-                                              onsubmit="return confirm('Inhalt von {{ manufacturer.name }} synchronisieren?');">
-                                            <button type="submit" class="btn btn-sm btn-outline-success" 
-                                                    title="Inhalt synchronisieren">
+                                        <form method="POST" action="{{ url_for('admin.sync_manufacturer_content', manufacturer_id=manufacturer.id) }}"
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Hersteller {{ manufacturer.name }} in die Warteschlange stellen?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                    title="In Warteschlange">
                                                 <i class="bi bi-arrow-repeat"></i>
                                             </button>
                                         </form>
@@ -164,6 +177,25 @@
                                     </div>
                                 </td>
                             </tr>
+                            {% if job %}
+                            <tr>
+                                <td colspan="6" class="text-muted small">
+                                    <span class="me-2">Queue:</span>
+                                    {% if job.status == 'success' %}
+                                    <span class="badge bg-success">Erfolgreich</span>
+                                    {% elif job.status == 'failed' %}
+                                    <span class="badge bg-danger">Fehlgeschlagen</span>
+                                    {% elif job.status == 'running' %}
+                                    <span class="badge bg-warning text-dark">Laeuft</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Warteschlange</span>
+                                    {% endif %}
+                                    <span class="ms-2">Fortschritt: {{ job.completed_steps }}/{{ job.total_steps }}</span>
+                                    <span class="ms-2">|</span>
+                                    <a href="{{ url_for('admin.sync_job_detail', job_id=job.id) }}" class="text-decoration-none">Log anzeigen</a>
+                                </td>
+                            </tr>
+                            {% endif %}
                             {% if manufacturer.last_sync %}
                             <tr>
                                 <td colspan="6" class="text-muted small">

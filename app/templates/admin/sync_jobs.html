@@ -1,0 +1,61 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Sync Jobs{% endblock %}
+{% block page_title %}Sync Jobs{% endblock %}
+
+{% block content %}
+<div class="card admin-card p-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-list-task me-2"></i>Hersteller Sync Jobs</h6>
+    {% if jobs %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Hersteller</th>
+                    <th>Status</th>
+                    <th>Fortschritt</th>
+                    <th>Erstellt</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.manufacturer.name if job.manufacturer else '-' }}</td>
+                    <td>
+                        {% if job.status == 'success' %}
+                        <span class="badge bg-success">Erfolgreich</span>
+                        {% elif job.status == 'failed' %}
+                        <span class="badge bg-danger">Fehlgeschlagen</span>
+                        {% elif job.status == 'running' %}
+                        <span class="badge bg-warning text-dark">Laeuft</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Warteschlange</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.completed_steps }}/{{ job.total_steps }}</td>
+                    <td class="small text-muted">{{ job.created_at.strftime('%d.%m.%Y %H:%M') if job.created_at else '' }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.sync_job_detail', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-file-text"></i>
+                        </a>
+                        {% if job.status == 'queued' %}
+                        <form method="POST" action="{{ url_for('admin.cancel_sync_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Job abbrechen?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">Noch keine Jobs.</p>
+    {% endif %}
+</div>
+{% endblock %}

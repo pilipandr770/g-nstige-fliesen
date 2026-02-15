@@ -16,7 +16,40 @@
                         <input class="form-check-input" type="checkbox" id="autoEnabled" name="auto_enabled" value="on" {% if settings.auto_enabled == 'on' %}checked{% endif %}>
                         <label class="form-check-label fw-500" for="autoEnabled">Automatische Generierung aktiviert</label>
                     </div>
-                    <small class="text-muted">Wenn aktiviert, werden Artikel automatisch nach Zeitplan generiert (Mo/Mi/Fr 8:00)</small>
+                    <small class="text-muted">Wenn aktiviert, werden Artikel automatisch nach Zeitplan generiert</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-500">Wochentage</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dayMon" name="auto_days" value="1" {% if '1' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="dayMon">Mo</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dayTue" name="auto_days" value="2" {% if '2' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="dayTue">Di</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dayWed" name="auto_days" value="3" {% if '3' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="dayWed">Mi</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dayThu" name="auto_days" value="4" {% if '4' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="dayThu">Do</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dayFri" name="auto_days" value="5" {% if '5' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="dayFri">Fr</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="daySat" name="auto_days" value="6" {% if '6' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="daySat">Sa</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="daySun" name="auto_days" value="7" {% if '7' in settings.auto_days %}checked{% endif %}>
+                            <label class="form-check-label" for="daySun">So</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-500">Artikel pro Durchlauf</label>
@@ -47,6 +80,20 @@
                 </div>
                 <button type="submit" class="btn btn-accent">
                     <i class="bi bi-check-lg me-1"></i>Einstellungen speichern
+                </button>
+            </form>
+        </div>
+
+        <div class="card admin-card p-4 mt-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-play-circle me-2 text-accent"></i>Sofortaktionen</h6>
+            <form method="POST" action="{{ url_for('admin.blog_generate_now') }}" class="mb-2">
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-magic me-1"></i>Jetzt generieren
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin.blog_publish_now') }}">
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-upload me-1"></i>Geplante Artikel jetzt veröffentlichen
                 </button>
             </form>
         </div>

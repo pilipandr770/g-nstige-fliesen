@@ -132,10 +132,25 @@ def create_app():
     @click.option("--category", default=None, help="Article category")
     @click.option("--manufacturer", default=None, help="Manufacturer slug")
     @click.option("--dry-run", is_flag=True, help="Preview without saving")
-    def generate_blog(count, category, manufacturer, dry_run):
+    @click.option("--force", is_flag=True, help="Run even if auto generation is disabled")
+    def generate_blog(count, category, manufacturer, dry_run, force):
         """Generate blog articles using AI from collected news."""
         from .services.blog_generator_service import get_blog_generator
         from .models import ChatConfig
+        from .models import BlogPost
+        from datetime import datetime
+
+        if not force:
+            auto_enabled = ChatConfig.get("blog_auto_enabled", "off") == "on"
+            auto_days_value = ChatConfig.get("blog_auto_days", "1,3,5")
+            auto_days = {d.strip() for d in auto_days_value.split(",") if d.strip()}
+            today = str(datetime.utcnow().isoweekday())
+            if not auto_enabled:
+                click.echo("Auto generation disabled. Skipping.")
+                return
+            if auto_days and today not in auto_days:
+                click.echo("Auto generation not scheduled for today. Skipping.")
+                return
 
         # Check if auto generation is enabled (skip check for manual CLI runs)
         generator = get_blog_generator()
@@ -161,6 +176,19 @@ def create_app():
             return
 
         results = generator.auto_generate(count=count)
+        auto_publish = ChatConfig.get("blog_auto_publish", "off") == "on"
+        published_count = 0
+        if auto_publish:
+            for r in results:
+                if not r.get('success'):
+                    continue
+                post = BlogPost.query.get(r.get('id'))
+                if post and not post.published:
+                    post.published = True
+                    post.status = 'published'
+                    post.published_at = datetime.utcnow()
+                    published_count += 1
+            db.session.commit()
         for r in results:
             if r.get('success'):
                 click.echo(f"Created: {r['title']} (ID: {r['id']})")
@@ -168,6 +196,8 @@ def create_app():
                 click.echo(f"Error: {r.get('error', 'Unknown')}")
 
         click.echo(f"\nDone: {sum(1 for r in results if r.get('success'))}/{count} articles generated.")
+        if auto_publish:
+            click.echo(f"Published: {published_count}")
 
     # CLI command: flask fetch-news
     @app.cli.command("fetch-news")
@@ -202,6 +232,43 @@ def create_app():
 
         db.session.commit()
         click.echo(f"Published {count} scheduled post(s).")
+
+    # CLI command: flask queue-auto-sync
+    @app.cli.command("queue-auto-sync")
+    def queue_auto_sync():
+        """Queue auto-sync for all active manufacturers with auto_sync enabled."""
+        from .models import Manufacturer, ManufacturerSyncJob
+        from .services.sync_queue import get_sync_queue
+        from .services.sync_jobs import run_manufacturer_sync
+
+        queue = get_sync_queue()
+        if not queue:
+            click.echo("REDIS_URL is not set. Queue not available.")
+            return
+
+        manufacturers = Manufacturer.query.filter_by(active=True, auto_sync=True).order_by(Manufacturer.order).all()
+        queued = 0
+        skipped = 0
+
+        for manufacturer in manufacturers:
+            existing = ManufacturerSyncJob.query.filter(
+                ManufacturerSyncJob.manufacturer_id == manufacturer.id,
+                ManufacturerSyncJob.status.in_(["queued", "running"]),
+            ).first()
+            if existing:
+                skipped += 1
+                continue
+
+            job = ManufacturerSyncJob(manufacturer_id=manufacturer.id, status="queued")
+            db.session.add(job)
+            db.session.commit()
+
+            rq_job = queue.enqueue(run_manufacturer_sync, job.id)
+            job.rq_job_id = rq_job.id
+            db.session.commit()
+            queued += 1
+
+        click.echo(f"Queued: {queued}, skipped: {skipped}")
 
     # Статичные логотипы производителей — вшиты в код, не зависят от БД
     MANUFACTURER_LOGOS = {
