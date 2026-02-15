@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd automatic AI-powered blog system with SEO optimization\n\nImplement comprehensive blog automation system for attracting customers\nto the Frankfurt showroom through SEO-optimized content.\n\nFeatures:\n- AI article generation via OpenAI gpt-4o-mini \\(German, SEO-optimized\\)\n- RSS/web scraping for manufacturer news collection\n- Full SEO: robots.txt, sitemap.xml, Open Graph, Schema.org\n- Blog detail pages with breadcrumbs, related posts, social sharing\n- Paginated blog listing with category/tag filtering\n- Admin: AI generation UI, full editor, news sources management\n- CLI commands: generate-blog, fetch-news, publish-scheduled\n- Cron jobs for automatic generation \\(Mon/Wed/Fri 8:00\\)\n\nModels:\n- BlogPost: added slug, excerpt, meta_title, meta_description, tags,\n  ai_generated, status, scheduled_at, views, reading_time\n- NewsSource: RSS/web news sources with manufacturer linking\n- BlogGenerationLog: token usage and cost tracking\n\nServices:\n- BlogGeneratorService: OpenAI integration, auto-categorization,\n  deduplication, CTA injection\n- NewsScraperService: RSS feeds, webpage scraping, manufacturer blogs\n\nTemplates:\n- Public: blog listing \\(paginated\\), detail page \\(SEO-complete\\)\n- Admin: blog management, AI generator, settings, news sources\n\nCost: ~$0.001-0.003 per article, ~$0.04/month at 3 articles/week\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
+    ]
+  }
+}
