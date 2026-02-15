@@ -7,10 +7,10 @@ bind = f"0.0.0.0:{os.getenv('PORT', '10000')}"
 backlog = 2048
 
 # Worker processes
-workers = int(os.getenv('WEB_CONCURRENCY', 1))
+workers = int(os.getenv('GUNICORN_WORKERS', os.getenv('WEB_CONCURRENCY', '1')))
 worker_class = 'sync'
 worker_connections = 1000
-timeout = 120  # 2 minutes timeout (default is 30s)
+timeout = int(os.getenv('GUNICORN_TIMEOUT', '120'))  # 2 minutes timeout (env or default 120s)
 keepalive = 5
 
 # Restart workers after N requests to prevent memory leaks

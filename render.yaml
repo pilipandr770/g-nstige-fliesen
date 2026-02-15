@@ -3,8 +3,12 @@ services:
     name: fliesen-showroom
     runtime: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn -c gunicorn_config.py wsgi:app"
+    startCommand: "gunicorn --timeout 120 --workers 1 wsgi:app"
     envVars:
+      - key: GUNICORN_TIMEOUT
+        value: "120"
+      - key: GUNICORN_WORKERS
+        value: "1"
       - key: DATABASE_URL
         sync: false
       - key: DB_SCHEMA
