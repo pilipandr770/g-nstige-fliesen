@@ -3245,95 +3245,6 @@ class UnicomStarkerParser(BaseManufacturerParser):
         return []
 
 
-class GazziniParser(BaseManufacturerParser):
-    """Парсер для Gazzini (Италия)"""
-    def __init__(self):
-        super().__init__('https://www.ceramicagazzini.it', 'gazzini')
-        # Create session for persistent cookies
-        self.session = requests.Session()
-        # Update headers to bypass 403 blocking
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-        })
-        # Initialize session by visiting homepage
-        try:
-            print("  🔐 Инициализация сессии...")
-            self.session.get(f"{self.base_url}/de/", timeout=15)
-        except:
-            pass
-        
-        # Hardcoded collection list since the site may block automated listing
-        self.collections_data = [
-            ('amalfi-lux', 'Amalfi Lux'),
-            ('antique-portofino', 'Antique Portofino'),
-            ('artwork', 'Artwork'),
-            ('atelier', 'Atelier'),
-            ('atlantic-blue', 'Atlantic Blue'),
-            ('avenue-white', 'Avenue White'),
-            ('blauwsteen', 'Blauwsteen'),
-            ('briques', 'Briques'),
-            ('calacatta-emerald', 'Calacatta Emerald'),
-            ('calacatta-oro', 'Calacatta Oro'),
-        ]
-    
-    def fetch_page(self, url: str) -> Optional[BeautifulSoup]:
-        """Override to use session instead of requests.get"""
-        try:
-            print(f"  📄 Загрузка: {url}")
-            response = self.session.get(url, timeout=15)
-            response.raise_for_status()
-            return BeautifulSoup(response.content, 'html.parser')
-        except Exception as e:
-            print(f"  ❌ Ошибка загрузки {url}: {str(e)}")
-            return None
-    
-    def extract_collections(self) -> List[Dict]:
-        print("🔍 Парсинг коллекций Gazzini...")
-        collections = []
-        for slug, name in self.collections_data:
-            url = f"{self.base_url}/de/kollektionen/{slug}/"  # Use German URL
-            print(f"  🔗 Коллекция: {name}")
-            images = []
-            # Add delay to avoid rate limiting
-            time.sleep(2)
-            collection_soup = self.fetch_page(url)
-            if collection_soup:
-                img_tags = collection_soup.find_all('img')
-                for img in img_tags:
-                    src = img.get('src', '')
-                    if src and 'logo' not in src.lower() and 'logo' not in src:
-                        full_url = self.normalize_url(src)
-                        img_path = self.download_image(full_url)
-                        if img_path:
-                            images.append(img_path)
-                            break
-            
-            # If no image found, try to use a placeholder or skip
-            if not images:
-                print(f"    ⚠️ Изображение не найдено для {name}")
-            
-            collections.append({
-                'title': name,
-                'description': '',
-                'full_content': '',
-                'technical_specs': '',
-                'image_url': images[0] if images else None,
-                'source_url': url
-            })
-        return collections
-    def extract_collection_detail(self, url: str) -> Dict:
-        return {'description': ''}
-    def extract_projects(self) -> List[Dict]:
-        return []
-    def extract_blog_posts(self) -> List[Dict]:
-        return []
-
-
 # Фабрика парсеров
 class ManufacturerParserFactory:
     """Фабрика для создания парсеров производителей"""
@@ -3353,7 +3264,7 @@ class ManufacturerParserFactory:
             'estudi-ceramico': EstudiCeremicoParser,
             'etile': EtileParser,
             'exagres': ExagresParser,
-            'gazzini': GazziniParser,
+            # 'gazzini': GazziniParser,  # REMOVED - website blocks automated access with Captcha
             'halcon': HalconParser,
             'roced': RocedParser,
             'tuscania': TuscaniParser,
