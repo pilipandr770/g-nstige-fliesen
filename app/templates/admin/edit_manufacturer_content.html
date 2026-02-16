@@ -11,7 +11,7 @@
                 <small class="text-muted">{{ content.content_type|capitalize }}</small>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="title" class="form-label">Titel *</label>
                         <input type="text" class="form-control" id="title" name="title" 
@@ -53,6 +53,12 @@
                             <p class="text-muted">Kein Bild vorhanden</p>
                             {% endif %}
                         </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Neues Bild hochladen</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="text-muted">JPG, PNG, GIF, WebP (max. 5MB)</small>
                     </div>
                     
                     <div class="form-check mb-3">

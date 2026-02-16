@@ -22,6 +22,13 @@ admin_routes = Blueprint("admin", __name__)
 api_routes = Blueprint("api", __name__)
 auth_routes = Blueprint("auth", __name__)
 
+# File upload configuration
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # ---------------------- PUBLIC ----------------------
 
 @public_routes.route("/")
@@ -1334,6 +1341,19 @@ def edit_manufacturer_content(content_id):
         content.technical_specs = request.form.get("technical_specs", "")
         content.source_url = request.form.get("source_url", "")
         content.published = request.form.get("published") == "on"
+        
+        # Handle image upload
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                manufacturer = content.manufacturer
+                filename = secure_filename(f"{manufacturer.slug}_{content.id}_{file.filename}")
+                upload_dir = os.path.join('app', 'static', 'uploads', 'manufacturers')
+                os.makedirs(upload_dir, exist_ok=True)
+                filepath = os.path.join(upload_dir, filename)
+                file.save(filepath)
+                content.image_url = f'manufacturers/{filename}'
+                flash(f"Bild hochgeladen: {filename}", "info")
         
         db.session.commit()
         flash(f"'{content.title}' wurde aktualisiert.", "success")
