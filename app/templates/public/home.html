@@ -56,7 +56,22 @@
 {% block content %}
 
 <!-- Hero Section -->
-<section class="hero-section">
+<section class="hero-section" id="heroSection">
+
+    <!-- Background slideshow -->
+    {% if hero_bg_images %}
+    <div id="heroBgCarousel" class="carousel slide carousel-fade hero-bg-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-inner">
+            {% for img in hero_bg_images %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <img src="/static/uploads/{{ img.filename }}" alt="{{ img.alt_text }}" class="hero-bg-img">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="hero-bg-overlay"></div>
+    {% endif %}
+
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-7">

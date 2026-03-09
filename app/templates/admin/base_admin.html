@@ -184,6 +184,7 @@
         <div class="sidebar-section">Design</div>
         <ul class="sidebar-nav">
             <li><a href="{{ url_for('admin.manage_hero_image') }}" class="{% if request.endpoint == 'admin.manage_hero_image' %}active{% endif %}"><i class="bi bi-image"></i> Hero Bild</a></li>
+            <li><a href="{{ url_for('admin.manage_hero_bg') }}" class="{% if request.endpoint == 'admin.manage_hero_bg' %}active{% endif %}"><i class="bi bi-collection-play"></i> Hero Hintergrund</a></li>
             <li><a href="{{ url_for('admin.manage_page_header_bg') }}" class="{% if request.endpoint == 'admin.manage_page_header_bg' %}active{% endif %}"><i class="bi bi-card-image"></i> Seiten-Hintergrund</a></li>
             <li><a href="{{ url_for('admin.manage_collections') }}" class="{% if request.endpoint == 'admin.manage_collections' %}active{% endif %}"><i class="bi bi-grid"></i> Kollektionen</a></li>
             <li><a href="{{ url_for('admin.manage_carousel') }}" class="{% if request.endpoint == 'admin.manage_carousel' %}active{% endif %}"><i class="bi bi-images"></i> Karousell</a></li>

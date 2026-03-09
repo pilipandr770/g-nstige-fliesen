@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, Response
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
-                     SocialLink, CarouselImage, HeroImage, Collection,
+                     SocialLink, CarouselImage, HeroImage, HeroBgImage, Collection,
                      Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog,
                      ManufacturerSyncJob)
 from .services.chat_service import get_chat_service
@@ -36,8 +36,10 @@ def home():
     page = Page.query.filter_by(slug="home").first()
     carousel_images = CarouselImage.query.filter_by(active=True).order_by(CarouselImage.order).all()
     hero_image = HeroImage.query.first()
+    hero_bg_images = HeroBgImage.query.filter_by(active=True).order_by(HeroBgImage.order).all()
     collections = Collection.query.filter_by(active=True).order_by(Collection.order).all()
-    return render_template("public/home.html", page=page, carousel_images=carousel_images, hero_image=hero_image, collections=collections)
+    return render_template("public/home.html", page=page, carousel_images=carousel_images,
+                           hero_image=hero_image, hero_bg_images=hero_bg_images, collections=collections)
 
 @public_routes.route("/blog")
 def blog():
@@ -1128,6 +1130,55 @@ def manage_page_header_bg():
 
     page_header_bg = ChatConfig.get("page_header_bg_filename") or ""
     return render_template("admin/page_header_bg.html", page_header_bg=page_header_bg)
+
+
+@admin_routes.route("/hero-bg", methods=["GET", "POST"])
+@login_required
+def manage_hero_bg():
+    """Upload images for the hero section background slideshow."""
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("Keine Datei ausgewählt.", "danger")
+            return redirect(url_for("admin.manage_hero_bg"))
+
+        file = request.files["file"]
+        alt_text = request.form.get("alt_text", "").strip()
+
+        if file.filename == "":
+            flash("Keine Datei ausgewählt.", "danger")
+            return redirect(url_for("admin.manage_hero_bg"))
+
+        if not allowed_file(file.filename):
+            flash("Nur Bilddateien erlaubt (PNG, JPG, GIF, WebP).", "danger")
+            return redirect(url_for("admin.manage_hero_bg"))
+
+        os.makedirs(os.path.join("app", "static", "uploads"), exist_ok=True)
+        filename = f"herobg_{datetime.now().timestamp()}_{secure_filename(file.filename)}"
+        file.save(os.path.join("app", "static", "uploads", filename))
+
+        max_order = db.session.query(db.func.max(HeroBgImage.order)).scalar() or 0
+        image = HeroBgImage(filename=filename, alt_text=alt_text or "Hero Hintergrund", order=max_order + 1)
+        db.session.add(image)
+        db.session.commit()
+
+        flash("Hintergrundbild hinzugefügt!", "success")
+        return redirect(url_for("admin.manage_hero_bg"))
+
+    images = HeroBgImage.query.filter_by(active=True).order_by(HeroBgImage.order).all()
+    return render_template("admin/hero_bg.html", images=images)
+
+
+@admin_routes.route("/hero-bg/delete/<int:image_id>")
+@login_required
+def delete_hero_bg_image(image_id):
+    image = HeroBgImage.query.get_or_404(image_id)
+    filepath = os.path.join("app", "static", "uploads", image.filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    db.session.delete(image)
+    db.session.commit()
+    flash("Bild gelöscht.", "success")
+    return redirect(url_for("admin.manage_hero_bg"))
 
 
 # ---------------------- ADMIN: MANUFACTURERS ----------------------

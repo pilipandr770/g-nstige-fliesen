@@ -248,6 +248,20 @@ class HeroImage(db.Model):
         return f"<HeroImage {self.filename}>"
 
 
+class HeroBgImage(db.Model):
+    __tablename__ = "hero_bg_images"
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    alt_text = db.Column(db.String(255))
+    order = db.Column(db.Integer, default=0)
+    active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<HeroBgImage {self.filename}>"
+
+
 class Collection(db.Model):
     __tablename__ = "collections"
     id = db.Column(db.Integer, primary_key=True)
