@@ -315,9 +315,15 @@ def datenschutz():
 
 @public_routes.route("/hersteller")
 def manufacturers():
-    """Страница со списком всех производителей"""
-    manufacturers = Manufacturer.query.filter_by(active=True).order_by(Manufacturer.order).all()
-    return render_template("public/manufacturers.html", manufacturers=manufacturers)
+    """Страница с фото коллекций (без названий производителей)"""
+    collections = ManufacturerContent.query.filter_by(
+        content_type='collection',
+        published=True
+    ).filter(
+        ManufacturerContent.image_url.isnot(None),
+        ManufacturerContent.image_url != ''
+    ).order_by(ManufacturerContent.order, ManufacturerContent.created_at.desc()).all()
+    return render_template("public/manufacturers.html", collections=collections)
 
 @public_routes.route("/hersteller/<slug>")
 def manufacturer_detail(slug):
@@ -1070,6 +1076,59 @@ def manage_hero_image():
 
     hero_image = HeroImage.query.first()
     return render_template("admin/hero_image.html", hero_image=hero_image)
+
+
+@admin_routes.route("/page-header-bg", methods=["GET", "POST"])
+@login_required
+def manage_page_header_bg():
+    """Upload / remove the background image shown behind page headers."""
+    from .models import ChatConfig
+
+    if request.method == "POST":
+        action = request.form.get("action", "upload")
+
+        if action == "delete":
+            old_filename = ChatConfig.get("page_header_bg_filename")
+            if old_filename:
+                old_path = os.path.join("app", "static", "uploads", old_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            ChatConfig.set("page_header_bg_filename", "", "Hintergrundbild für Seitenköpfe")
+            flash("Hintergrundbild entfernt.", "success")
+            return redirect(url_for("admin.manage_page_header_bg"))
+
+        # Upload
+        if "file" not in request.files:
+            flash("Keine Datei ausgewählt.", "danger")
+            return redirect(url_for("admin.manage_page_header_bg"))
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("Keine Datei ausgewählt.", "danger")
+            return redirect(url_for("admin.manage_page_header_bg"))
+
+        if not allowed_file(file.filename):
+            flash("Nur Bilddateien erlaubt (PNG, JPG, GIF, WebP).", "danger")
+            return redirect(url_for("admin.manage_page_header_bg"))
+
+        # Remove old file
+        old_filename = ChatConfig.get("page_header_bg_filename")
+        if old_filename:
+            old_path = os.path.join("app", "static", "uploads", old_filename)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        os.makedirs(os.path.join("app", "static", "uploads"), exist_ok=True)
+        filename = f"pagebg_{datetime.now().timestamp()}_{secure_filename(file.filename)}"
+        file.save(os.path.join("app", "static", "uploads", filename))
+
+        ChatConfig.set("page_header_bg_filename", filename, "Hintergrundbild für Seitenköpfe")
+        flash("Hintergrundbild erfolgreich hochgeladen!", "success")
+        return redirect(url_for("admin.manage_page_header_bg"))
+
+    page_header_bg = ChatConfig.get("page_header_bg_filename") or ""
+    return render_template("admin/page_header_bg.html", page_header_bg=page_header_bg)
+
 
 # ---------------------- ADMIN: MANUFACTURERS ----------------------
 

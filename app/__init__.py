@@ -303,11 +303,13 @@ def create_app():
     # Context processor for global template variables
     @app.context_processor
     def inject_globals():
-        from .models import SocialLink
+        from .models import SocialLink, ChatConfig
         social_links = SocialLink.query.order_by(SocialLink.order).all()
+        page_header_bg = ChatConfig.get("page_header_bg_filename") or ""
         return {
             "social_links": social_links,
             "manufacturer_logos": MANUFACTURER_LOGOS,
+            "page_header_bg": page_header_bg,
         }
 
     return app

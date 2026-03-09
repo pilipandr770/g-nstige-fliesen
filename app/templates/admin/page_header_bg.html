@@ -1,0 +1,80 @@
+﻿{% extends "admin/base_admin.html" %}
+
+{% block title %}Seiten-Hintergrund{% endblock %}
+{% block page_title %}Seitenköpfe – Hintergrundbild{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Upload Form -->
+    <div class="col-lg-5">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-card-image me-2 text-accent"></i>Bild hochladen</h6>
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload">
+                <div class="mb-3">
+                    <label class="form-label fw-500">Neues Hintergrundbild *</label>
+                    <input type="file" class="form-control" name="file" accept="image/*" required>
+                    <small class="text-muted d-block mt-2">PNG, JPG, WebP empfohlen — Querformat, min. 1400 px breit</small>
+                </div>
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-upload me-1"></i>Hochladen & Aktivieren
+                </button>
+            </form>
+
+            {% if page_header_bg %}
+            <hr class="my-3">
+            <form method="POST">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                        onclick="return confirm('Hintergrundbild wirklich entfernen?')">
+                    <i class="bi bi-trash me-1"></i>Bild entfernen (dunkelblauer Hintergrund)
+                </button>
+            </form>
+            {% endif %}
+
+            <hr class="my-3">
+            <small class="text-muted d-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Dieses Bild erscheint als Hintergrund aller Seiten-Banner (Über uns, Blog, Leistungen, FAQ usw.).
+                Ohne Bild wird der Standard-Verlaufshintergrund angezeigt.
+            </small>
+        </div>
+    </div>
+
+    <!-- Current Image Preview -->
+    <div class="col-lg-7">
+        <div class="card admin-card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Aktuelles Bild / Vorschau</h6>
+
+            {% if page_header_bg %}
+            <div class="rounded-3 overflow-hidden mb-3" style="height: 200px; position: relative;">
+                <img src="/static/uploads/{{ page_header_bg }}"
+                     alt="Seitenkopf-Hintergrund"
+                     style="width:100%; height:100%; object-fit:cover;">
+                <div style="position:absolute;inset:0;background:linear-gradient(rgba(26,26,46,0.65),rgba(22,33,62,0.65));
+                            display:flex;align-items:center;padding:1.5rem;">
+                    <div class="text-white">
+                        <h3 class="fw-bold mb-1" style="font-size:1.4rem;">Über uns</h3>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.9rem;">Ihr Partner für hochwertige Fliesen in Frankfurt</p>
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted"><i class="bi bi-file-image me-1"></i>{{ page_header_bg }}</small>
+            {% else %}
+            <div class="rounded-3 overflow-hidden mb-3" style="height: 200px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                display:flex; align-items:center; padding:1.5rem;">
+                <div class="text-white">
+                    <h3 class="fw-bold mb-1" style="font-size:1.4rem;">Über uns</h3>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.9rem;">Standard-Hintergrund (kein Bild)</p>
+                </div>
+            </div>
+            <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Kein Bild gesetzt – Standardfarbe wird verwendet.</small>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
