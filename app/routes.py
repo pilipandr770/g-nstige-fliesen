@@ -1328,48 +1328,57 @@ def delete_all_tile_photos():
     return redirect(url_for("admin.manage_tile_photos"))
 
 
-@admin_routes.route("/tile-photos/scrape-all", methods=["POST"])
-@login_required
-def scrape_all_manufacturers():
-    """Use all built-in manufacturer parsers to import collection images into TilePhoto."""
+def _scrape_all_manufacturers_background(app):
+    """Background thread: run all manufacturer parsers and save results to DB."""
     MANUFACTURER_SLUGS = [
         'aparici', 'dune', 'equipe', 'ape', 'lafabbrica',
         'baldocer', 'casalgrande', 'distrimat', 'estudi-ceramico',
         'etile', 'exagres', 'halcon', 'roced', 'tuscania', 'unicom-starker',
     ]
-    total_imported = 0
-    errors = []
-    max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
-
-    for slug in MANUFACTURER_SLUGS:
-        parser = ManufacturerParserFactory.get_parser(slug)
-        if not parser:
-            continue
-        try:
-            collections = parser.extract_collections()
-        except Exception as exc:
-            errors.append(f"{slug}: {exc}")
-            continue
-        for item in collections:
-            local_path = item.get("image_url", "")
-            if not local_path:
+    with app.app_context():
+        for slug in MANUFACTURER_SLUGS:
+            parser = ManufacturerParserFactory.get_parser(slug)
+            if not parser:
                 continue
-            # Avoid duplicates
-            if TilePhoto.query.filter_by(filename=local_path).first():
+            try:
+                collections = parser.extract_collections()
+            except Exception as exc:
+                print(f"[scrape-all] Fehler bei {slug}: {exc}")
                 continue
-            max_order += 1
-            db.session.add(TilePhoto(
-                filename=local_path,
-                title=item.get("title") or None,
-                order=max_order,
-            ))
-            total_imported += 1
+            try:
+                max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
+                for item in collections:
+                    local_path = item.get("image_url", "")
+                    if not local_path:
+                        continue
+                    if TilePhoto.query.filter_by(filename=local_path).first():
+                        continue
+                    max_order += 1
+                    db.session.add(TilePhoto(
+                        filename=local_path,
+                        title=item.get("title") or None,
+                        order=max_order,
+                    ))
+                db.session.commit()
+                print(f"[scrape-all] {slug}: OK")
+            except Exception as exc:
+                db.session.rollback()
+                print(f"[scrape-all] DB-Fehler bei {slug}: {exc}")
 
-    db.session.commit()
-    if errors:
-        flash(f"{total_imported} Fotos importiert. Fehler bei: {', '.join(errors)}", "warning")
-    else:
-        flash(f"{total_imported} Fotos von allen Herstellern importiert!", "success")
+
+@admin_routes.route("/tile-photos/scrape-all", methods=["POST"])
+@login_required
+def scrape_all_manufacturers():
+    """Start background thread to scrape all manufacturer parsers."""
+    from flask import current_app
+    app = current_app._get_current_object()
+    t = threading.Thread(target=_scrape_all_manufacturers_background, args=(app,), daemon=True)
+    t.start()
+    flash(
+        "Hersteller-Scan wurde gestartet. Die Fotos erscheinen nach und nach in der Liste. "
+        "Seite nach einigen Minuten neu laden.",
+        "info"
+    )
     return redirect(url_for("admin.manage_tile_photos"))
 
 

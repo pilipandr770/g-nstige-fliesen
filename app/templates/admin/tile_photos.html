@@ -81,8 +81,7 @@
                 und importiert die gefundenen Kollektions-Fotos automatisch.
                 <strong>Kann einige Minuten dauern.</strong>
             </p>
-            <form method="POST" action="{{ url_for('admin.scrape_all_manufacturers') }}"
-                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<span class=\'spinner-border spinner-border-sm me-1\'></span>Lädt…'">
+            <form method="POST" action="{{ url_for('admin.scrape_all_manufacturers') }}">
                 <button type="submit" class="btn btn-warning w-100">
                     <i class="bi bi-cloud-arrow-down me-1"></i>Alle Hersteller scannen
                 </button>
