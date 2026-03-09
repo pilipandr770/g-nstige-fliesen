@@ -9,7 +9,7 @@
 <div class="row g-4 mb-4">
 
     <!-- File Upload -->
-    <div class="col-lg-4">
+    <div class="col-lg-3">
         <div class="card admin-card p-4 h-100">
             <h6 class="fw-bold mb-3"><i class="bi bi-upload me-2 text-accent"></i>Foto hochladen</h6>
             <form method="POST" enctype="multipart/form-data">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Import by URL -->
-    <div class="col-lg-4">
+    <div class="col-lg-3">
         <div class="card admin-card p-4 h-100">
             <h6 class="fw-bold mb-3"><i class="bi bi-link-45deg me-2 text-accent"></i>Bild-URL importieren</h6>
             <form method="POST">
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Scrape from page -->
-    <div class="col-lg-4">
+    <div class="col-lg-3">
         <div class="card admin-card p-4 h-100">
             <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-accent"></i>Alle Bilder von Seite laden</h6>
             <form method="POST" action="{{ url_for('admin.scrape_tile_photos') }}">
@@ -59,7 +59,7 @@
                     <small class="text-muted d-block mt-1">Seite wird gescannt, alle Bilder werden importiert</small>
                 </div>
                 <button type="submit" class="btn btn-outline-secondary w-100">
-                    <i class="bi bi-cloud-download me-1"></i>Seite scannen & importieren
+                    <i class="bi bi-cloud-download me-1"></i>Seite scannen &amp; importieren
                 </button>
             </form>
             <hr class="my-3">
@@ -71,35 +71,81 @@
             </form>
         </div>
     </div>
+
+    <!-- Scrape ALL manufacturers -->
+    <div class="col-lg-3">
+        <div class="card admin-card p-4 h-100 border border-warning border-opacity-50">
+            <h6 class="fw-bold mb-3"><i class="bi bi-building me-2 text-warning"></i>Alle Hersteller scannen</h6>
+            <p class="small text-muted mb-3">
+                Startet alle eingebauten Hersteller-Parser (Aparici, Dune, Equipe, APE, La Fabbrica, Baldocer, Casalgrande u.a.)
+                und importiert die gefundenen Kollektions-Fotos automatisch.
+                <strong>Kann einige Minuten dauern.</strong>
+            </p>
+            <form method="POST" action="{{ url_for('admin.scrape_all_manufacturers') }}"
+                  onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<span class=\'spinner-border spinner-border-sm me-1\'></span>Lädt…'">
+                <button type="submit" class="btn btn-warning w-100">
+                    <i class="bi bi-cloud-arrow-down me-1"></i>Alle Hersteller scannen
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Photo Grid -->
 <div class="card admin-card p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="fw-bold mb-0"><i class="bi bi-grid me-2"></i>Fotos ({{ photos|length }})</h6>
+        <h6 class="fw-bold mb-0">
+            <i class="bi bi-grid me-2"></i>Fotos ({{ photos|length }})
+            <span class="text-muted fw-normal small ms-2">
+                {{ photos|selectattr('active')|list|length }} aktiv,
+                {{ photos|rejectattr('active')|list|length }} inaktiv
+            </span>
+        </h6>
     </div>
 
     {% if photos %}
     <div class="row g-3">
         {% for photo in photos %}
         <div class="col-6 col-md-4 col-lg-3 col-xl-2">
-            <div class="card border-0 bg-light overflow-hidden h-100">
+            <div class="card border-0 overflow-hidden h-100 {% if not photo.active %}opacity-50{% endif %}"
+                 style="background: #f8f9fa;">
                 <div class="position-relative">
                     <img src="{{ photo.display_url }}"
                          alt="{{ photo.title or '' }}"
                          class="card-img-top"
                          style="height: 130px; object-fit: cover;"
-                         onerror="this.parentElement.parentElement.style.opacity='0.4'">
+                         onerror="this.parentElement.parentElement.style.opacity='0.3'">
+                    {% if not photo.active %}
+                    <span class="position-absolute top-0 end-0 badge bg-secondary m-1" style="font-size:0.6rem;">inaktiv</span>
+                    {% endif %}
                 </div>
                 <div class="card-body p-2">
                     {% if photo.title %}
-                    <p class="small mb-1 text-truncate" title="{{ photo.title }}">{{ photo.title }}</p>
+                    <p class="small mb-2 text-truncate" title="{{ photo.title }}">{{ photo.title }}</p>
                     {% endif %}
-                    <a href="{{ url_for('admin.delete_tile_photo', photo_id=photo.id) }}"
-                       class="btn btn-sm btn-outline-danger w-100"
-                       onclick="return confirm('Foto löschen?')">
-                        <i class="bi bi-trash"></i>
-                    </a>
+                    <div class="d-flex gap-1">
+                        <!-- Edit -->
+                        <a href="{{ url_for('admin.edit_tile_photo', photo_id=photo.id) }}"
+                           class="btn btn-sm btn-outline-secondary flex-grow-1"
+                           title="Bearbeiten">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <!-- Toggle active -->
+                        <form method="POST" action="{{ url_for('admin.toggle_tile_photo', photo_id=photo.id) }}" class="d-inline">
+                            <button type="submit"
+                                    class="btn btn-sm {% if photo.active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                                    title="{% if photo.active %}Deaktivieren{% else %}Aktivieren{% endif %}">
+                                <i class="bi {% if photo.active %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+                            </button>
+                        </form>
+                        <!-- Delete -->
+                        <a href="{{ url_for('admin.delete_tile_photo', photo_id=photo.id) }}"
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Foto löschen?')"
+                           title="Löschen">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

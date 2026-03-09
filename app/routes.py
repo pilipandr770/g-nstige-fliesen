@@ -6,6 +6,7 @@ from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
                      ManufacturerSyncJob, TilePhoto)
 from .services.chat_service import get_chat_service
 from .services.content_scraper_service import scraper_service
+from .services.manufacturer_parsers import ManufacturerParserFactory
 from .services.sync_queue import get_sync_queue, get_redis_url
 from .services.sync_jobs import run_manufacturer_sync
 from redis import Redis
@@ -1216,7 +1217,7 @@ def manage_tile_photos():
 
         return redirect(url_for("admin.manage_tile_photos"))
 
-    photos = TilePhoto.query.filter_by(active=True).order_by(TilePhoto.order, TilePhoto.id.desc()).all()
+    photos = TilePhoto.query.order_by(TilePhoto.order, TilePhoto.id.desc()).all()
     return render_template("admin/tile_photos.html", photos=photos)
 
 
@@ -1325,6 +1326,75 @@ def delete_all_tile_photos():
     db.session.commit()
     flash("Alle Fotos gelöscht.", "success")
     return redirect(url_for("admin.manage_tile_photos"))
+
+
+@admin_routes.route("/tile-photos/scrape-all", methods=["POST"])
+@login_required
+def scrape_all_manufacturers():
+    """Use all built-in manufacturer parsers to import collection images into TilePhoto."""
+    MANUFACTURER_SLUGS = [
+        'aparici', 'dune', 'equipe', 'ape', 'lafabbrica',
+        'baldocer', 'casalgrande', 'distrimat', 'estudi-ceramico',
+        'etile', 'exagres', 'halcon', 'roced', 'tuscania', 'unicom-starker',
+    ]
+    total_imported = 0
+    errors = []
+    max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
+
+    for slug in MANUFACTURER_SLUGS:
+        parser = ManufacturerParserFactory.get_parser(slug)
+        if not parser:
+            continue
+        try:
+            collections = parser.extract_collections()
+        except Exception as exc:
+            errors.append(f"{slug}: {exc}")
+            continue
+        for item in collections:
+            local_path = item.get("image_url", "")
+            if not local_path:
+                continue
+            # Avoid duplicates
+            if TilePhoto.query.filter_by(filename=local_path).first():
+                continue
+            max_order += 1
+            db.session.add(TilePhoto(
+                filename=local_path,
+                title=item.get("title") or None,
+                order=max_order,
+            ))
+            total_imported += 1
+
+    db.session.commit()
+    if errors:
+        flash(f"{total_imported} Fotos importiert. Fehler bei: {', '.join(errors)}", "warning")
+    else:
+        flash(f"{total_imported} Fotos von allen Herstellern importiert!", "success")
+    return redirect(url_for("admin.manage_tile_photos"))
+
+
+@admin_routes.route("/tile-photos/toggle/<int:photo_id>", methods=["POST"])
+@login_required
+def toggle_tile_photo(photo_id):
+    """Toggle active/inactive for a tile photo."""
+    photo = TilePhoto.query.get_or_404(photo_id)
+    photo.active = not photo.active
+    db.session.commit()
+    return redirect(url_for("admin.manage_tile_photos"))
+
+
+@admin_routes.route("/tile-photos/edit/<int:photo_id>", methods=["GET", "POST"])
+@login_required
+def edit_tile_photo(photo_id):
+    """Edit a tile photo's title and active state."""
+    photo = TilePhoto.query.get_or_404(photo_id)
+    if request.method == "POST":
+        photo.title = request.form.get("title", "").strip() or None
+        photo.active = request.form.get("active") == "on"
+        db.session.commit()
+        flash("Foto aktualisiert.", "success")
+        return redirect(url_for("admin.manage_tile_photos"))
+    return render_template("admin/edit_tile_photo.html", photo=photo)
 
 
 # ---------------------- ADMIN: MANUFACTURERS ----------------------
