@@ -171,7 +171,7 @@
             <li><a href="{{ url_for('admin.manage_blog') }}" class="{% if request.endpoint in ['admin.manage_blog', 'admin.edit_blog_post'] %}active{% endif %}"><i class="bi bi-journal-text"></i> Blog</a></li>
             <li><a href="{{ url_for('admin.blog_settings') }}" class="{% if request.endpoint == 'admin.blog_settings' %}active{% endif %}"><i class="bi bi-robot"></i> Blog KI-Generator</a></li>
             <li><a href="{{ url_for('admin.manage_news_sources') }}" class="{% if request.endpoint == 'admin.manage_news_sources' %}active{% endif %}"><i class="bi bi-rss"></i> Nachrichtenquellen</a></li>
-            <li><a href="{{ url_for('admin.manage_manufacturers') }}" class="{% if request.endpoint == 'admin.manage_manufacturers' %}active{% endif %}"><i class="bi bi-building"></i> Hersteller</a></li>
+            <li><a href="{{ url_for('admin.manage_tile_photos') }}" class="{% if request.endpoint in ['admin.manage_tile_photos'] %}active{% endif %}"><i class="bi bi-grid-3x3-gap-fill"></i> Kollektions-Fotos</a></li>
             <li><a href="{{ url_for('admin.manage_sources') }}" class="{% if request.endpoint == 'admin.manage_sources' %}active{% endif %}"><i class="bi bi-link-45deg"></i> Content Quellen</a></li>
         </ul>
 

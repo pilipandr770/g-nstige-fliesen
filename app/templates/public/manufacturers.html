@@ -26,12 +26,12 @@
             {% for item in collections %}
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="collection-tile rounded overflow-hidden position-relative">
-                    <img src="{{ item.image_url }}"
-                         alt="{{ item.title }}"
+                    <img src="{{ item.display_url }}"
+                         alt="{{ item.title or 'Fliesen-Kollektion' }}"
                          class="w-100"
                          style="height: 220px; object-fit: cover; display: block;">
                     <div class="collection-tile-overlay d-flex align-items-end p-2">
-                        <span class="collection-tile-label small fw-semibold text-white lh-sm">{{ item.title }}</span>
+                        {% if item.title %}<span class="collection-tile-label small fw-semibold text-white lh-sm">{{ item.title }}</span>{% endif %}
                     </div>
                 </div>
             </div>

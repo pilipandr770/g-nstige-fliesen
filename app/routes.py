@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
                      SocialLink, CarouselImage, HeroImage, HeroBgImage, Collection,
                      Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog,
-                     ManufacturerSyncJob)
+                     ManufacturerSyncJob, TilePhoto)
 from .services.chat_service import get_chat_service
 from .services.content_scraper_service import scraper_service
 from .services.sync_queue import get_sync_queue, get_redis_url
@@ -317,15 +317,9 @@ def datenschutz():
 
 @public_routes.route("/hersteller")
 def manufacturers():
-    """Страница с фото коллекций (без названий производителей)"""
-    collections = ManufacturerContent.query.filter_by(
-        content_type='collection',
-        published=True
-    ).filter(
-        ManufacturerContent.image_url.isnot(None),
-        ManufacturerContent.image_url != ''
-    ).order_by(ManufacturerContent.order, ManufacturerContent.created_at.desc()).all()
-    return render_template("public/manufacturers.html", collections=collections)
+    """Kollektionen page – flat grid of all tile photos."""
+    photos = TilePhoto.query.filter_by(active=True).order_by(TilePhoto.order, TilePhoto.id.desc()).all()
+    return render_template("public/manufacturers.html", collections=photos)
 
 @public_routes.route("/hersteller/<slug>")
 def manufacturer_detail(slug):
@@ -1179,6 +1173,158 @@ def delete_hero_bg_image(image_id):
     db.session.commit()
     flash("Bild gelöscht.", "success")
     return redirect(url_for("admin.manage_hero_bg"))
+
+
+# ---------------------- ADMIN: TILE PHOTOS (Kollektionen) ----------------------
+
+@admin_routes.route("/tile-photos", methods=["GET", "POST"])
+@login_required
+def manage_tile_photos():
+    """Manage the flat tile photo grid shown on the Kollektionen page."""
+    if request.method == "POST":
+        action = request.form.get("action", "upload")
+
+        if action == "upload":
+            file = request.files.get("file")
+            title = request.form.get("title", "").strip()
+            if not file or file.filename == "":
+                flash("Keine Datei ausgewählt.", "danger")
+                return redirect(url_for("admin.manage_tile_photos"))
+            if not allowed_file(file.filename):
+                flash("Nur Bilddateien erlaubt (PNG, JPG, GIF, WebP).", "danger")
+                return redirect(url_for("admin.manage_tile_photos"))
+            os.makedirs(os.path.join("app", "static", "uploads", "tiles"), exist_ok=True)
+            filename = f"tile_{datetime.now().timestamp()}_{secure_filename(file.filename)}"
+            file.save(os.path.join("app", "static", "uploads", "tiles", filename))
+            max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
+            photo = TilePhoto(filename=f"tiles/{filename}", title=title or None, order=max_order + 1)
+            db.session.add(photo)
+            db.session.commit()
+            flash("Foto hochgeladen!", "success")
+
+        elif action == "import_url":
+            url = request.form.get("image_url", "").strip()
+            title = request.form.get("title", "").strip()
+            if not url:
+                flash("Keine URL angegeben.", "danger")
+                return redirect(url_for("admin.manage_tile_photos"))
+            max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
+            photo = TilePhoto(image_url=url, title=title or None, order=max_order + 1)
+            db.session.add(photo)
+            db.session.commit()
+            flash("Bild-URL importiert!", "success")
+
+        return redirect(url_for("admin.manage_tile_photos"))
+
+    photos = TilePhoto.query.filter_by(active=True).order_by(TilePhoto.order, TilePhoto.id.desc()).all()
+    return render_template("admin/tile_photos.html", photos=photos)
+
+
+@admin_routes.route("/tile-photos/delete/<int:photo_id>")
+@login_required
+def delete_tile_photo(photo_id):
+    photo = TilePhoto.query.get_or_404(photo_id)
+    if photo.filename:
+        filepath = os.path.join("app", "static", "uploads", photo.filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    db.session.delete(photo)
+    db.session.commit()
+    flash("Foto gelöscht.", "success")
+    return redirect(url_for("admin.manage_tile_photos"))
+
+
+@admin_routes.route("/tile-photos/scrape", methods=["POST"])
+@login_required
+def scrape_tile_photos():
+    """Scrape all images from a given URL and add them as TilePhotos."""
+    from bs4 import BeautifulSoup
+    import hashlib
+    from urllib.parse import urljoin, urlparse
+
+    page_url = request.form.get("scrape_url", "").strip()
+    if not page_url:
+        flash("Keine URL angegeben.", "danger")
+        return redirect(url_for("admin.manage_tile_photos"))
+
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    try:
+        resp = requests.get(page_url, headers=headers, timeout=20)
+        resp.raise_for_status()
+    except Exception as e:
+        flash(f"Seite konnte nicht geladen werden: {e}", "danger")
+        return redirect(url_for("admin.manage_tile_photos"))
+
+    soup = BeautifulSoup(resp.content, "html.parser")
+    img_urls = set()
+    for tag in soup.find_all("img"):
+        src = tag.get("src") or tag.get("data-src") or tag.get("data-lazy-src") or ""
+        if src:
+            src = urljoin(page_url, src)
+            # skip tiny icons / SVG
+            if any(x in src.lower() for x in ["logo", "icon", ".svg", "placeholder", "blank"]):
+                continue
+            img_urls.add(src)
+
+    if not img_urls:
+        flash("Keine Bilder auf dieser Seite gefunden.", "warning")
+        return redirect(url_for("admin.manage_tile_photos"))
+
+    upload_dir = os.path.join("app", "static", "uploads", "tiles")
+    os.makedirs(upload_dir, exist_ok=True)
+    imported = 0
+    max_order = db.session.query(db.func.max(TilePhoto.order)).scalar() or 0
+
+    for img_url in img_urls:
+        try:
+            url_hash = hashlib.md5(img_url.encode()).hexdigest()[:10]
+            ext = os.path.splitext(urlparse(img_url).path)[1].split("?")[0] or ".jpg"
+            if len(ext) > 5 or not ext.startswith("."):
+                ext = ".jpg"
+            filename = f"tile_{url_hash}{ext}"
+            filepath = os.path.join(upload_dir, filename)
+            if os.path.exists(filepath):
+                # already imported — just make sure it's in DB
+                if not TilePhoto.query.filter_by(filename=f"tiles/{filename}").first():
+                    max_order += 1
+                    db.session.add(TilePhoto(filename=f"tiles/{filename}", order=max_order))
+                    imported += 1
+                continue
+            r = requests.get(img_url, headers=headers, timeout=20, stream=True)
+            r.raise_for_status()
+            content_type = r.headers.get("content-type", "")
+            if "image" not in content_type:
+                continue
+            with open(filepath, "wb") as f:
+                for chunk in r.iter_content(8192):
+                    f.write(chunk)
+            if os.path.getsize(filepath) < 5000:
+                os.remove(filepath)
+                continue
+            max_order += 1
+            db.session.add(TilePhoto(filename=f"tiles/{filename}", order=max_order))
+            imported += 1
+        except Exception:
+            continue
+
+    db.session.commit()
+    flash(f"{imported} Bilder erfolgreich importiert!", "success")
+    return redirect(url_for("admin.manage_tile_photos"))
+
+
+@admin_routes.route("/tile-photos/delete-all", methods=["POST"])
+@login_required
+def delete_all_tile_photos():
+    photos = TilePhoto.query.all()
+    for p in photos:
+        if p.filename:
+            fp = os.path.join("app", "static", "uploads", p.filename)
+            if os.path.exists(fp):
+                os.remove(fp)
+    TilePhoto.query.delete()
+    db.session.commit()
+    flash("Alle Fotos gelöscht.", "success")
+    return redirect(url_for("admin.manage_tile_photos"))
 
 
 # ---------------------- ADMIN: MANUFACTURERS ----------------------

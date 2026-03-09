@@ -1,0 +1,127 @@
+﻿{% extends "admin/base_admin.html" %}
+
+{% block title %}Kollektions-Fotos{% endblock %}
+{% block page_title %}Kollektions-Fotos verwalten{% endblock %}
+
+{% block content %}
+
+<!-- Action Forms -->
+<div class="row g-4 mb-4">
+
+    <!-- File Upload -->
+    <div class="col-lg-4">
+        <div class="card admin-card p-4 h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-upload me-2 text-accent"></i>Foto hochladen</h6>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="file" accept="image/*" required>
+                    <small class="text-muted d-block mt-1">PNG, JPG, WebP</small>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" name="title" placeholder="Titel (optional)">
+                </div>
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-upload me-1"></i>Hochladen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import by URL -->
+    <div class="col-lg-4">
+        <div class="card admin-card p-4 h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-link-45deg me-2 text-accent"></i>Bild-URL importieren</h6>
+            <form method="POST">
+                <input type="hidden" name="action" value="import_url">
+                <div class="mb-3">
+                    <input type="url" class="form-control" name="image_url" placeholder="https://..." required>
+                    <small class="text-muted d-block mt-1">Direkte URL zum Bild</small>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" name="title" placeholder="Titel (optional)">
+                </div>
+                <button type="submit" class="btn btn-outline-accent w-100">
+                    <i class="bi bi-plus-circle me-1"></i>Importieren
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scrape from page -->
+    <div class="col-lg-4">
+        <div class="card admin-card p-4 h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-accent"></i>Alle Bilder von Seite laden</h6>
+            <form method="POST" action="{{ url_for('admin.scrape_tile_photos') }}">
+                <div class="mb-3">
+                    <input type="url" class="form-control" name="scrape_url"
+                           placeholder="https://hersteller.com/kollektionen" required>
+                    <small class="text-muted d-block mt-1">Seite wird gescannt, alle Bilder werden importiert</small>
+                </div>
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-cloud-download me-1"></i>Seite scannen & importieren
+                </button>
+            </form>
+            <hr class="my-3">
+            <form method="POST" action="{{ url_for('admin.delete_all_tile_photos') }}"
+                  onsubmit="return confirm('Alle Fotos wirklich löschen?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                    <i class="bi bi-trash3 me-1"></i>Alle Fotos löschen
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Grid -->
+<div class="card admin-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-grid me-2"></i>Fotos ({{ photos|length }})</h6>
+    </div>
+
+    {% if photos %}
+    <div class="row g-3">
+        {% for photo in photos %}
+        <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+            <div class="card border-0 bg-light overflow-hidden h-100">
+                <div class="position-relative">
+                    <img src="{{ photo.display_url }}"
+                         alt="{{ photo.title or '' }}"
+                         class="card-img-top"
+                         style="height: 130px; object-fit: cover;"
+                         onerror="this.parentElement.parentElement.style.opacity='0.4'">
+                </div>
+                <div class="card-body p-2">
+                    {% if photo.title %}
+                    <p class="small mb-1 text-truncate" title="{{ photo.title }}">{{ photo.title }}</p>
+                    {% endif %}
+                    <a href="{{ url_for('admin.delete_tile_photo', photo_id=photo.id) }}"
+                       class="btn btn-sm btn-outline-danger w-100"
+                       onclick="return confirm('Foto löschen?')">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-grid-3x3-gap display-4 text-muted mb-3 d-block"></i>
+        <p class="text-muted mb-0">Noch keine Fotos. Laden Sie Bilder hoch oder scannen Sie eine Herstellerseite.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.btn-outline-accent {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.btn-outline-accent:hover {
+    background: var(--accent);
+    color: #fff;
+}
+</style>
+
+{% endblock %}

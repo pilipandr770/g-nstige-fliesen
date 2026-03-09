@@ -279,6 +279,27 @@ class Collection(db.Model):
         return f"<Collection {self.title}>"
 
 
+class TilePhoto(db.Model):
+    """Simple flat collection of tile photos shown on the Kollektionen page."""
+    __tablename__ = "tile_photos"
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255))          # local upload (relative to uploads/)
+    image_url = db.Column(db.String(500))         # external or local /static/uploads/...
+    title = db.Column(db.String(255))
+    active = db.Column(db.Boolean, default=True)
+    order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def display_url(self):
+        if self.filename:
+            return f"/static/uploads/{self.filename}"
+        return self.image_url or ""
+
+    def __repr__(self):
+        return f"<TilePhoto {self.id}>"
+
+
 class NewsSource(db.Model):
     __tablename__ = "news_sources"
     id = db.Column(db.Integer, primary_key=True)
