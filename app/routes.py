@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from .models import (Page, BlogPost, ContentSource, ChatLog, User, ChatConfig,
                      SocialLink, CarouselImage, HeroImage, HeroBgImage, Collection,
                      Manufacturer, ManufacturerContent, NewsSource, BlogGenerationLog,
-                     ManufacturerSyncJob, TilePhoto)
+                     ManufacturerSyncJob, TilePhoto, Product, Order)
+import stripe
 from .services.chat_service import get_chat_service
 from .services.content_scraper_service import scraper_service
 from .services.manufacturer_parsers import ManufacturerParserFactory
@@ -1724,3 +1725,248 @@ def toggle_publish_content(content_id):
     flash(f"'{content.title}' wurde {status}.", "success")
     return redirect(url_for("admin.manage_manufacturer_content", 
                           manufacturer_id=content.manufacturer_id))
+
+
+# ---------------------- PUBLIC: SHOP ----------------------
+
+@public_routes.route("/shop")
+def shop():
+    products = Product.query.filter_by(active=True).order_by(Product.order, Product.id).all()
+    return render_template("public/shop.html", products=products)
+
+
+@public_routes.route("/shop/success")
+def shop_success():
+    session_id = request.args.get("session_id", "")
+    order = None
+    if session_id:
+        order = Order.query.filter_by(stripe_session_id=session_id).first()
+    return render_template("public/shop_success.html", order=order)
+
+
+@public_routes.route("/shop/cancel")
+def shop_cancel():
+    return render_template("public/shop_cancel.html")
+
+
+@public_routes.route("/shop/webhook", methods=["POST"])
+def shop_webhook():
+    """Stripe Webhook – bestätigt erfolgreiche Zahlung."""
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+    payload = request.get_data()
+    sig_header = request.headers.get("Stripe-Signature", "")
+
+    try:
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        else:
+            import json
+            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    if event["type"] == "checkout.session.completed":
+        session_obj = event["data"]["object"]
+        order = Order.query.filter_by(stripe_session_id=session_obj["id"]).first()
+        if order:
+            order.status = "paid"
+            details = session_obj.get("customer_details") or {}
+            order.customer_email = details.get("email", "")
+            order.customer_name = details.get("name", "")
+            db.session.commit()
+
+    return jsonify({"status": "ok"}), 200
+
+
+@public_routes.route("/shop/checkout/<int:product_id>", methods=["POST"])
+def shop_checkout(product_id):
+    """Erstellt eine Stripe Checkout Session und leitet weiter."""
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+
+    product = Product.query.filter_by(id=product_id, active=True).first_or_404()
+
+    quantity = request.form.get("quantity", 1, type=int)
+    quantity = max(1, min(quantity, 99))
+
+    if product.stock is not None and product.stock < quantity:
+        flash("Nicht genügend Bestand vorhanden.", "danger")
+        return redirect(url_for("public.shop_detail", slug=product.slug))
+
+    base_url = request.host_url.rstrip("/")
+    try:
+        product_data = {"name": product.name}
+        if product.description:
+            product_data["description"] = product.description[:500]
+
+        session_obj = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "eur",
+                    "product_data": product_data,
+                    "unit_amount": product.price_cents,
+                },
+                "quantity": quantity,
+            }],
+            mode="payment",
+            success_url=base_url + url_for("public.shop_success") + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=base_url + url_for("public.shop_cancel"),
+        )
+
+        order = Order(
+            product_id=product.id,
+            quantity=quantity,
+            stripe_session_id=session_obj.id,
+            amount_cents=product.price_cents * quantity,
+            status="pending",
+        )
+        db.session.add(order)
+        db.session.commit()
+
+        return redirect(session_obj.url, code=303)
+    except Exception as e:
+        flash(f"Fehler beim Bezahlvorgang: {str(e)}", "danger")
+        return redirect(url_for("public.shop_detail", slug=product.slug))
+
+
+@public_routes.route("/shop/<slug>")
+def shop_detail(slug):
+    product = Product.query.filter_by(slug=slug, active=True).first_or_404()
+    return render_template("public/shop_detail.html", product=product)
+
+
+# ---------------------- ADMIN: SHOP ----------------------
+
+@admin_routes.route("/shop")
+@login_required
+def manage_shop_products():
+    products = Product.query.order_by(Product.order, Product.id).all()
+    total_orders = Order.query.count()
+    paid_orders = Order.query.filter_by(status="paid").count()
+    return render_template("admin/shop_products.html",
+                           products=products,
+                           total_orders=total_orders,
+                           paid_orders=paid_orders)
+
+
+@admin_routes.route("/shop/add", methods=["GET", "POST"])
+@login_required
+def add_shop_product():
+    if request.method == "POST":
+        from slugify import slugify as _slugify
+
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        price_str = request.form.get("price", "0").strip().replace(",", ".").replace("€", "").strip()
+        active = request.form.get("active") == "on"
+        stock_str = request.form.get("stock", "").strip()
+        order_num = request.form.get("order", 0, type=int)
+
+        if not name:
+            flash("Produktname ist erforderlich.", "danger")
+            return render_template("admin/shop_edit.html", product=None)
+
+        try:
+            price_cents = int(round(float(price_str) * 100))
+        except ValueError:
+            flash("Ungültiger Preis.", "danger")
+            return render_template("admin/shop_edit.html", product=None)
+
+        stock = int(stock_str) if stock_str.isdigit() else None
+
+        base_slug = _slugify(name)
+        slug = base_slug
+        counter = 1
+        while Product.query.filter_by(slug=slug).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        image_filename = None
+        if "image" in request.files:
+            file = request.files["image"]
+            if file and file.filename and allowed_file(file.filename):
+                os.makedirs(os.path.join("app", "static", "uploads", "products"), exist_ok=True)
+                fname = f"product_{datetime.now().timestamp()}_{secure_filename(file.filename)}"
+                file.save(os.path.join("app", "static", "uploads", "products", fname))
+                image_filename = f"products/{fname}"
+
+        product = Product(
+            name=name, slug=slug, description=description or None,
+            price_cents=price_cents, active=active,
+            stock=stock, order=order_num, image_filename=image_filename,
+        )
+        db.session.add(product)
+        db.session.commit()
+        flash(f"Produkt '{name}' wurde erstellt.", "success")
+        return redirect(url_for("admin.manage_shop_products"))
+
+    return render_template("admin/shop_edit.html", product=None)
+
+
+@admin_routes.route("/shop/edit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def edit_shop_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    if request.method == "POST":
+        from slugify import slugify as _slugify
+
+        product.name = request.form.get("name", "").strip()
+        product.description = request.form.get("description", "").strip() or None
+        price_str = request.form.get("price", "0").strip().replace(",", ".").replace("€", "").strip()
+        product.active = request.form.get("active") == "on"
+        stock_str = request.form.get("stock", "").strip()
+        product.order = request.form.get("order", 0, type=int)
+
+        try:
+            product.price_cents = int(round(float(price_str) * 100))
+        except ValueError:
+            flash("Ungültiger Preis.", "danger")
+            return render_template("admin/shop_edit.html", product=product)
+
+        product.stock = int(stock_str) if stock_str.isdigit() else None
+
+        if "image" in request.files:
+            file = request.files["image"]
+            if file and file.filename and allowed_file(file.filename):
+                if product.image_filename:
+                    old_path = os.path.join("app", "static", "uploads", product.image_filename)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                os.makedirs(os.path.join("app", "static", "uploads", "products"), exist_ok=True)
+                fname = f"product_{datetime.now().timestamp()}_{secure_filename(file.filename)}"
+                file.save(os.path.join("app", "static", "uploads", "products", fname))
+                product.image_filename = f"products/{fname}"
+
+        db.session.commit()
+        flash(f"Produkt '{product.name}' wurde aktualisiert.", "success")
+        return redirect(url_for("admin.manage_shop_products"))
+
+    return render_template("admin/shop_edit.html", product=product)
+
+
+@admin_routes.route("/shop/delete/<int:product_id>", methods=["POST"])
+@login_required
+def delete_shop_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    if product.image_filename:
+        img_path = os.path.join("app", "static", "uploads", product.image_filename)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+    name = product.name
+    db.session.delete(product)
+    db.session.commit()
+    flash(f"Produkt '{name}' wurde gelöscht.", "success")
+    return redirect(url_for("admin.manage_shop_products"))
+
+
+@admin_routes.route("/shop/orders")
+@login_required
+def shop_orders():
+    status_filter = request.args.get("status", "")
+    query = Order.query
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+    orders = query.order_by(Order.created_at.desc()).all()
+    return render_template("admin/shop_orders.html", orders=orders, status_filter=status_filter)

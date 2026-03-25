@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} – Shop | Fliesen Showroom Frankfurt{% endblock %}
+
+{% block meta_tags %}
+<meta name="description" content="{{ product.description|truncate(155) if product.description else product.name }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2" style="background: none;">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('public.shop') }}" class="text-white text-decoration-none opacity-75">Shop</a>
+                </li>
+                <li class="breadcrumb-item active text-white">{{ product.name }}</li>
+            </ol>
+        </nav>
+        <h1>{{ product.name }}</h1>
+    </div>
+</section>
+
+<!-- Product Detail -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+
+            <!-- Product Image -->
+            <div class="col-lg-6">
+                {% if product.image_filename %}
+                <img src="/static/uploads/{{ product.image_filename }}"
+                     class="img-fluid rounded shadow"
+                     alt="{{ product.name }}"
+                     style="width: 100%; max-height: 520px; object-fit: cover; border-radius: 12px !important;">
+                {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light rounded"
+                     style="height: 420px; border-radius: 12px;">
+                    <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Product Info -->
+            <div class="col-lg-6">
+                <h1 class="fw-bold mb-1">{{ product.name }}</h1>
+
+                <div class="fs-1 fw-bold mb-4" style="color: var(--accent);">{{ product.price_display }}</div>
+
+                {% if product.description %}
+                <div class="text-muted mb-4" style="line-height: 1.7;">{{ product.description }}</div>
+                {% endif %}
+
+                {% if product.stock is not none and product.stock <= 0 %}
+                <div class="alert alert-warning d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Dieses Produkt ist derzeit nicht auf Lager.</span>
+                </div>
+                <a href="{{ url_for('public.shop') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Zurück zum Shop
+                </a>
+                {% else %}
+                <form method="POST" action="{{ url_for('public.shop_checkout', product_id=product.id) }}">
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Menge</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="input-group" style="max-width: 140px;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(-1)">−</button>
+                                <input type="number" class="form-control text-center fw-bold"
+                                       name="quantity" id="qtyInput" value="1" min="1"
+                                       {% if product.stock %}max="{{ product.stock }}"{% else %}max="99"{% endif %}>
+                                <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(1)">+</button>
+                            </div>
+                            {% if product.stock %}
+                            <small class="text-muted">Noch {{ product.stock }} verfügbar</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent btn-lg px-5 mb-4">
+                        <i class="bi bi-credit-card me-2"></i>Jetzt kaufen
+                    </button>
+                </form>
+
+                <!-- Trust Signals -->
+                <div class="border-top pt-3 d-flex flex-column gap-2">
+                    <span class="text-muted small"><i class="bi bi-shield-check me-2 text-accent"></i>Sichere Zahlung über Stripe</span>
+                    <span class="text-muted small"><i class="bi bi-lock me-2 text-accent"></i>SSL-verschlüsselte Verbindung</span>
+                    <span class="text-muted small"><i class="bi bi-credit-card me-2 text-accent"></i>Alle gängigen Kreditkarten akzeptiert</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function adjustQty(delta) {
+    const inp = document.getElementById('qtyInput');
+    const min = parseInt(inp.min) || 1;
+    const max = parseInt(inp.max) || 99;
+    inp.value = Math.max(min, Math.min(max, parseInt(inp.value || 1) + delta));
+}
+</script>
+
+{% endblock %}

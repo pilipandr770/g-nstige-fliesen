@@ -300,6 +300,51 @@ class TilePhoto(db.Model):
         return f"<TilePhoto {self.id}>"
 
 
+class Product(db.Model):
+    """Produkt im Online-Shop."""
+    __tablename__ = "products"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    slug = db.Column(db.String(300), unique=True, index=True)
+    description = db.Column(db.Text)
+    price_cents = db.Column(db.Integer, nullable=False, default=0)  # Preis in Cent, z.B. 1500 = 15,00 €
+    image_filename = db.Column(db.String(255))  # lokales Upload relativ zu uploads/
+    active = db.Column(db.Boolean, default=True)
+    stock = db.Column(db.Integer)  # None = unbegrenzt
+    order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    orders = db.relationship('Order', backref='product', lazy=True)
+
+    @property
+    def price_euros(self):
+        return self.price_cents / 100
+
+    @property
+    def price_display(self):
+        return f"{self.price_euros:.2f} €".replace('.', ',')
+
+    def __repr__(self):
+        return f"<Product {self.name}>"
+
+
+class Order(db.Model):
+    """Bestellung / Stripe-Zahlung."""
+    __tablename__ = "orders"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    stripe_session_id = db.Column(db.String(500), unique=True)
+    customer_email = db.Column(db.String(255))
+    customer_name = db.Column(db.String(255))
+    amount_cents = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='pending')  # pending, paid, cancelled
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Order {self.id} {self.status}>"
+
+
 class NewsSource(db.Model):
     __tablename__ = "news_sources"
     id = db.Column(db.Integer, primary_key=True)

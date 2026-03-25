@@ -1,0 +1,127 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Shop – Bestellungen{% endblock %}
+{% block page_title %}Bestellungen{% endblock %}
+
+{% block content %}
+
+<!-- Filter Buttons -->
+<div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+    <span class="text-muted small me-1">Status:</span>
+    <a href="{{ url_for('admin.shop_orders') }}"
+       class="btn btn-sm {% if not status_filter %}btn-accent{% else %}btn-outline-secondary{% endif %}">
+        Alle
+    </a>
+    <a href="{{ url_for('admin.shop_orders', status='paid') }}"
+       class="btn btn-sm {% if status_filter == 'paid' %}btn-success{% else %}btn-outline-success{% endif %}">
+        <i class="bi bi-check-circle me-1"></i>Bezahlt
+    </a>
+    <a href="{{ url_for('admin.shop_orders', status='pending') }}"
+       class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+        <i class="bi bi-clock me-1"></i>Ausstehend
+    </a>
+    <a href="{{ url_for('admin.shop_orders', status='cancelled') }}"
+       class="btn btn-sm {% if status_filter == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        <i class="bi bi-x-circle me-1"></i>Storniert
+    </a>
+    <a href="{{ url_for('admin.manage_shop_products') }}" class="btn btn-sm btn-outline-secondary ms-auto">
+        <i class="bi bi-arrow-left me-1"></i>Produkte
+    </a>
+</div>
+
+<!-- Orders Table -->
+<div class="card admin-card">
+    {% if orders %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Produkt</th>
+                    <th>Kunde</th>
+                    <th style="width: 80px;">Menge</th>
+                    <th>Betrag</th>
+                    <th>Status</th>
+                    <th>Datum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="text-muted small">{{ order.id }}</td>
+                    <td>
+                        {% if order.product %}
+                        <strong>{{ order.product.name }}</strong>
+                        {% else %}
+                        <span class="text-muted">–</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.customer_name %}
+                        <div class="fw-semibold small">{{ order.customer_name }}</div>
+                        {% endif %}
+                        <div class="text-muted small">{{ order.customer_email or '–' }}</div>
+                    </td>
+                    <td class="text-center">{{ order.quantity }}</td>
+                    <td class="fw-bold text-accent">
+                        {% if order.amount_cents %}
+                        {{ "%.2f"|format(order.amount_cents / 100)|replace('.', ',') }} €
+                        {% else %}
+                        –
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.status == 'paid' %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Bezahlt</span>
+                        {% elif order.status == 'pending' %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Ausstehend</span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Storniert</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ order.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">
+                        {% if order.created_at %}
+                        {{ order.created_at.strftime('%d.%m.%Y') }}<br>
+                        <span style="font-size: 0.75rem;">{{ order.created_at.strftime('%H:%M') }} Uhr</span>
+                        {% else %}
+                        –
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Summary -->
+    <div class="p-3 border-top bg-light d-flex gap-4 flex-wrap">
+        <span class="small text-muted">
+            <strong>{{ orders|length }}</strong> Bestellung{{ 'en' if orders|length != 1 else '' }} angezeigt
+        </span>
+        {% set paid = orders|selectattr('status', 'eq', 'paid')|list %}
+        {% if paid %}
+        <span class="small text-muted">
+            Umsatz (bezahlt):
+            <strong class="text-accent">
+                {{ "%.2f"|format(paid|sum(attribute='amount_cents') / 100)|replace('.', ',') }} €
+            </strong>
+        </span>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-receipt display-4 text-muted mb-3 d-block"></i>
+        <p class="text-muted">
+            {% if status_filter %}
+            Keine Bestellungen mit Status „{{ status_filter }}" gefunden.
+            <a href="{{ url_for('admin.shop_orders') }}" class="d-block mt-2">Alle Bestellungen anzeigen</a>
+            {% else %}
+            Noch keine Bestellungen vorhanden.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

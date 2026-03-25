@@ -1,0 +1,106 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{% if product %}Produkt bearbeiten{% else %}Neues Produkt{% endif %}{% endblock %}
+{% block page_title %}{% if product %}Produkt bearbeiten{% else %}Neues Produkt erstellen{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-xl-6">
+
+        {% if product and product.image_filename %}
+        <!-- Preview -->
+        <div class="card admin-card p-3 mb-4 text-center">
+            <img src="/static/uploads/{{ product.image_filename }}"
+                 alt="{{ product.name }}"
+                 class="img-fluid rounded"
+                 style="max-height: 250px; object-fit: cover; border-radius: 8px !important;">
+        </div>
+        {% endif %}
+
+        <div class="card admin-card p-4">
+            <form method="POST" enctype="multipart/form-data">
+
+                <!-- Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Produktname <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" required
+                           value="{{ product.name if product else '' }}"
+                           placeholder="z.B. Marmor Fliesen 60×60 cm">
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Beschreibung</label>
+                    <textarea class="form-control" name="description" rows="5"
+                              placeholder="Produktbeschreibung, Material, Abmessungen...">{{ product.description if product else '' }}</textarea>
+                </div>
+
+                <!-- Price -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Preis <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="price" required
+                               value="{{ '%.2f'|format(product.price_euros)|replace('.', ',') if product else '' }}"
+                               placeholder="0,00"
+                               pattern="[0-9]+([,\.][0-9]{1,2})?">
+                        <span class="input-group-text">€</span>
+                    </div>
+                    <small class="text-muted">Komma oder Punkt als Dezimaltrennzeichen möglich</small>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Produktbild</label>
+                    {% if product and product.image_filename %}
+                    <small class="d-block text-muted mb-2">Neues Bild auswählen, um das vorhandene zu ersetzen:</small>
+                    {% endif %}
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                    <small class="text-muted">PNG, JPG, WebP empfohlen</small>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <!-- Stock -->
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold">Bestand</label>
+                        <input type="number" class="form-control" name="stock" min="0"
+                               value="{{ product.stock if product and product.stock is not none else '' }}"
+                               placeholder="Leer = unbegrenzt">
+                        <small class="text-muted">Leer lassen = unbegrenzt verfügbar</small>
+                    </div>
+
+                    <!-- Order -->
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold">Reihenfolge im Shop</label>
+                        <input type="number" class="form-control" name="order" min="0"
+                               value="{{ product.order if product else 0 }}">
+                        <small class="text-muted">Kleinere Zahl = weiter oben</small>
+                    </div>
+                </div>
+
+                <!-- Active Toggle -->
+                <div class="mb-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="active" id="activeSwitch"
+                               {% if not product or product.active %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold" for="activeSwitch">
+                            Im Shop anzeigen (aktiv)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-accent px-4">
+                        <i class="bi bi-check-lg me-1"></i>Speichern
+                    </button>
+                    <a href="{{ url_for('admin.manage_shop_products') }}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-1"></i>Abbrechen
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
